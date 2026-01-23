@@ -1,0 +1,15 @@
+using System;
+
+namespace FaceRecoTrackService.Core.Models
+{
+    public class FacePerson
+    {
+        public Guid Id { get; set; }
+        public string UserName { get; set; } = "";
+        public string Ip { get; set; } = "";
+        public string Description { get; set; } = "";
+        public bool IsTest { get; set; }
+        public string? ImageBase64 { get; set; }
+        public DateTime CreatedAtUtc { get; set; }
+    }
+}

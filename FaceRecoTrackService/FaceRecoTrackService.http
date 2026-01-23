@@ -1,0 +1,24 @@
+@FaceRecoTrackService_HostAddress = http://localhost:5299
+
+GET {{FaceRecoTrackService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
+POST {{FaceRecoTrackService_HostAddress}}/api/face/register
+Content-Type: application/json
+
+{
+  "userName": "test-user",
+  "base64Image": "<base64>"
+}
+
+###
+
+GET {{FaceRecoTrackService_HostAddress}}/api/face/getfaceinfo/{{faceId}}
+
+###
+
+DELETE {{FaceRecoTrackService_HostAddress}}/api/face/deletefaceinfo/{{faceId}}
+
+###

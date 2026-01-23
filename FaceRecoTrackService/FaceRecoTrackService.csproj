@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="10.0.1" />
+    <PackageReference Include="Qdrant.Client" Version="1.16.1" />
+    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+    <PackageReference Include="Emgu.CV" Version="4.12.0.5764" />
+    <PackageReference Include="Emgu.CV.runtime.windows" Version="4.12.0.5764" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="10.1.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.1.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.0" />
+  </ItemGroup>
+
+</Project>
