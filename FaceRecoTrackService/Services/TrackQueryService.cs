@@ -25,7 +25,9 @@ namespace FaceRecoTrackService.Services
         {
             var (items, total) = await _trackRepository.GetTracksByPersonAsync(personId, pageNum, pageSize, cancellationToken);
 
-            var list = items.Select(item => new TrackQueryItem
+            var list = items
+                .OrderByDescending(item => item.SnapTimeUtc)
+                .Select(item => new TrackQueryItem
             {
                 Id = item.PersonId.ToString(),
                 SnapTime = item.SnapTimeUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),

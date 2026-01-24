@@ -56,6 +56,7 @@ builder.Services.AddSingleton<QdrantConfig>(sp =>
 builder.Services.AddScoped<FaceRegistrationService>();
 builder.Services.AddScoped<FaceDeletionService>();
 builder.Services.AddScoped<FaceQueryService>();
+builder.Services.AddScoped<FaceVerificationService>();
 builder.Services.AddScoped<TrackQueryService>();
 builder.Services.AddScoped<TrackRecordService>();
 
@@ -78,12 +79,9 @@ using (var scope = app.Services.CreateScope())
         Distance.Cosine,
         cancellationToken: app.Lifetime.ApplicationStopping);
 }
+app.UseSwagger();
+app.UseSwaggerUI();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 app.UseHttpsRedirection();
 app.MapControllers();

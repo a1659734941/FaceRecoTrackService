@@ -8,22 +8,22 @@ namespace FaceRecoTrackService.Core.Dtos
         [JsonPropertyName("id")]
         public string Id { get; set; } = "";
 
-        [JsonPropertyName("抓拍时间")]
+        [JsonPropertyName("snapTime")]
         public string SnapTime { get; set; } = "";
 
-        [JsonPropertyName("抓拍地点")]
+        [JsonPropertyName("snapLocation")]
         public string SnapLocation { get; set; } = "";
 
-        [JsonPropertyName("抓拍摄像头")]
+        [JsonPropertyName("snapCamera")]
         public string SnapCamera { get; set; } = "";
 
-        [JsonPropertyName("录像摄像头")]
+        [JsonPropertyName("recordCamera")]
         public string RecordCamera { get; set; } = "";
 
-        [JsonPropertyName("录像开始时间")]
+        [JsonPropertyName("recordStartTime")]
         public string RecordStartTime { get; set; } = "";
 
-        [JsonPropertyName("录像结束时间")]
+        [JsonPropertyName("recordEndTime")]
         public string RecordEndTime { get; set; } = "";
     }
 
@@ -32,10 +32,10 @@ namespace FaceRecoTrackService.Core.Dtos
         [JsonPropertyName("list")]
         public List<TrackQueryItem> List { get; set; } = new();
 
-        [JsonPropertyName("pagesize")]
+        [JsonPropertyName("pageSize")]
         public int Pagesize { get; set; }
 
-        [JsonPropertyName("pagenum")]
+        [JsonPropertyName("pageNum")]
         public int Pagenum { get; set; }
 
         [JsonPropertyName("total")]

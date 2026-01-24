@@ -435,6 +435,63 @@ FaceRecoTrackService/
 
 ---
 
+## 🗄️ PostgreSQL 数据库设计
+
+本服务启动时会自动创建数据库表结构（见 `PgSchemaInitializer`），核心表如下：
+
+### 1) face_persons（人脸主表）
+
+用于存储注册的人脸信息与基础描述。
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| id | uuid | PK | 人脸唯一 ID |
+| user_name | text | NOT NULL | 用户名 |
+| ip | text | NOT NULL | IP 地址 |
+| description | text | NULL | 描述信息 |
+| is_test | boolean | NOT NULL | 是否测试数据 |
+| image_base64 | text | NULL | 原始人脸 Base64 |
+| created_at | timestamptz | NOT NULL | 创建时间 |
+
+### 2) camera_mapping（摄像头映射）
+
+用于将抓拍摄像头映射到录像摄像头和房间。
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| snap_camera_ip | text | PK | 抓拍摄像头 IP |
+| record_camera_ip | text | NOT NULL | 录像摄像头 IP |
+| room_name | text | NULL | 房间名称 |
+
+### 3) track_records（轨迹记录）
+
+用于记录人脸抓拍与轨迹信息。
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| id | bigserial | PK | 轨迹记录主键 |
+| person_id | uuid | NOT NULL | 关联 `face_persons.id` |
+| snap_time | timestamptz | NOT NULL | 抓拍时间（由文件名解析） |
+| snap_location | text | NULL | 抓拍地点 |
+| snap_camera_ip | text | NOT NULL | 抓拍摄像头 IP |
+| record_camera_ip | text | NULL | 录像摄像头 IP |
+| record_start_time | timestamptz | NOT NULL | 录像开始时间 |
+| record_end_time | timestamptz | NULL | 录像结束时间 |
+| created_at | timestamptz | NOT NULL | 记录创建时间 |
+
+### 索引
+
+| 索引 | 字段 | 说明 |
+|------|------|------|
+| idx_track_person_time | (person_id, snap_time DESC) | 按人员+时间倒序查询轨迹 |
+
+### 关系说明
+
+- `face_persons` 1:N `track_records`  
+- `camera_mapping` 为抓拍 IP 的辅助映射，未设置时使用默认配置或文件名解析结果
+
+---
+
 ## ⚙️ 配置参数详解
 
 ### FaceRecognition 配置

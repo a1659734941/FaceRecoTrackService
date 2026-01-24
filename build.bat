@@ -12,8 +12,7 @@ set PROJECT_DIR=FaceRecoTrackService
 set PROJECT_FILE=%PROJECT_DIR%\FaceRecoTrackService.csproj
 set OUTPUT_DIR=dist
 set PUBLISH_DIR=%OUTPUT_DIR%\publish
-set VERSION=%date:~0,4%%date:~5,2%%date:~8,2%_%time:~0,2%%time:~3,2%%time:~6,2%
-set VERSION=%VERSION: =0%
+for /f %%i in ('powershell -NoProfile -Command "(Get-Date).ToString(\"yyyyMMdd_HHmmss\")"') do set BUILD_VERSION=%%i
 
 :: 检查项目文件是否存在
 if not exist "%PROJECT_FILE%" (
@@ -83,7 +82,7 @@ if exist "%PROJECT_DIR%\appsettings.Development.json" (
 :: 创建发布信息文件
 echo 创建发布信息文件...
 echo 构建时间: %date% %time% > "%PUBLISH_DIR%\build_info.txt"
-echo 版本: %VERSION% >> "%PUBLISH_DIR%\build_info.txt"
+echo 版本: %BUILD_VERSION% >> "%PUBLISH_DIR%\build_info.txt"
 echo 运行时: win-x64 >> "%PUBLISH_DIR%\build_info.txt"
 echo 单文件模式: 是 >> "%PUBLISH_DIR%\build_info.txt"
 

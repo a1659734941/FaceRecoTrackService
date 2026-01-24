@@ -18,6 +18,7 @@ namespace FaceRecoTrackService.API.Controllers
         private readonly FaceRegistrationService _registrationService;
         private readonly FaceDeletionService _deletionService;
         private readonly FaceQueryService _queryService;
+        private readonly FaceVerificationService _verificationService;
 
         /// <summary>
         /// 初始化人脸接口控制器
@@ -28,11 +29,13 @@ namespace FaceRecoTrackService.API.Controllers
         public FaceController(
             FaceRegistrationService registrationService,
             FaceDeletionService deletionService,
-            FaceQueryService queryService)
+            FaceQueryService queryService,
+            FaceVerificationService verificationService)
         {
             _registrationService = registrationService;
             _deletionService = deletionService;
             _queryService = queryService;
+            _verificationService = verificationService;
         }
 
         /// <summary>
@@ -144,6 +147,48 @@ namespace FaceRecoTrackService.API.Controllers
             catch (Exception ex)
             {
                 return ApiResponse<string>.Fail(ErrorCodes.InternalError, $"删除失败：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 人脸对比（返回相似度与裁剪后的人脸Base64）
+        /// </summary>
+        [HttpPost("compare")]
+        public async Task<ApiResponse<FaceCompareResponse>> Compare([FromBody] FaceCompareRequest request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var result = await _verificationService.CompareAsync(request, cancellationToken);
+                return ApiResponse<FaceCompareResponse>.Ok(result, "对比完成");
+            }
+            catch (ArgumentException ex)
+            {
+                return ApiResponse<FaceCompareResponse>.Fail(ErrorCodes.BadRequest, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<FaceCompareResponse>.Fail(ErrorCodes.InternalError, $"对比失败：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 人脸合规检测（是否人脸、是否合规）
+        /// </summary>
+        [HttpPost("check")]
+        public async Task<ApiResponse<FaceCheckResponse>> Check([FromBody] FaceCheckRequest request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var result = await _verificationService.CheckAsync(request, cancellationToken);
+                return ApiResponse<FaceCheckResponse>.Ok(result, "检测完成");
+            }
+            catch (ArgumentException ex)
+            {
+                return ApiResponse<FaceCheckResponse>.Fail(ErrorCodes.BadRequest, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<FaceCheckResponse>.Fail(ErrorCodes.InternalError, $"检测失败：{ex.Message}");
             }
         }
     }
