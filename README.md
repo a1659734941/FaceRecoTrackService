@@ -97,6 +97,47 @@ FaceRecoTrackService 是一个基于 .NET 8.0 开发的高性能人脸识别与�
 }
 ```
 
+**字段说明（逐项）**  
+
+- `ConnectionStrings`
+- `ConnectionStrings.Postgres`：PostgreSQL 连接字符串（主机、端口、账号、密码、数据库名）。
+
+- `Qdrant`
+- `Qdrant.Host`：Qdrant 服务地址。
+- `Qdrant.Port`：Qdrant 服务端口（默认 6334）。
+- `Qdrant.CollectionName`：向量集合名称（人脸向量存储的集合）。
+- `Qdrant.UseHttps`：是否启用 HTTPS 连接。
+- `Qdrant.ApiKey`：Qdrant API Key（如未启用可留空）。
+- `Qdrant.RecreateOnVectorSizeMismatch`：向量维度不一致时是否重建集合。
+
+- `FaceRecognition`
+- `FaceRecognition.YoloModelPath`：YOLO 人脸检测模型文件路径。
+- `FaceRecognition.FaceNetModelPath`：FaceNet 特征提取模型文件路径。
+- `FaceRecognition.DetectionConfidence`：人脸检测置信度阈值（越大越严格）。
+- `FaceRecognition.IouThreshold`：NMS 交并比阈值。
+- `FaceRecognition.FaceExpandRatio`：人脸裁剪时向外扩展像素数。
+- `FaceRecognition.BaseSharpnessThreshold`：基础清晰度阈值（拉普拉斯方差基准）。
+- `FaceRecognition.SizeThresholdCoefficient`：清晰度动态阈值系数（随人脸尺寸变化）。
+- `FaceRecognition.VectorSize`：特征向量维度（需与模型输出一致）。
+- `FaceRecognition.EnableDebugSaveFaces`：是否保存调试用的人脸裁剪图片。
+- `FaceRecognition.DebugSaveDir`：调试人脸图片保存目录。
+
+- `Pipeline`
+- `Pipeline.PollIntervalMs`：FTP 目录轮询间隔（毫秒）。
+- `Pipeline.MinFaceCount`：图片中最少人脸数量要求。
+- `Pipeline.TopK`：相似度检索返回的 TopK 数量。
+- `Pipeline.SimilarityThreshold`：主相似度阈值（用于判定同一人）。
+- `Pipeline.FallbackSimilarityThreshold`：备用相似度阈值（主阈值无结果时使用）。
+- `Pipeline.SnapshotSaveDir`：快照保存目录。
+- `Pipeline.DeleteProcessedSnapshots`：是否删除已处理的快照文件。
+
+- `FtpFolder`
+- `FtpFolder.Path`：监控的 FTP 本地目录路径。
+- `FtpFolder.IncludeSubdirectories`：是否递归子目录。
+- `FtpFolder.FilePatterns`：监控的文件后缀模式（支持通配符）。
+- `FtpFolder.DefaultCameraName`：未解析到摄像头信息时的默认名称。
+- `FtpFolder.DefaultLocation`：未解析到地点信息时的默认位置。
+
 ### 打包部署
 
 #### 方式一：使用打包脚本（推荐）
