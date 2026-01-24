@@ -72,3 +72,5 @@ FaceRecoTrackService/obj/FaceRecoTrackService.csproj.nuget.g.props
 FaceRecoTrackService/obj/FaceRecoTrackService.csproj.nuget.g.targets
 FaceRecoTrackService/obj/project.assets.json
 FaceRecoTrackService/obj/project.nuget.cache
+.vscode/launch.json
+.vscode/tasks.json
