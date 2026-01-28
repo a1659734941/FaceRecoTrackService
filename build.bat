@@ -3,7 +3,7 @@ chcp 65001 >nul
 setlocal enabledelayedexpansion
 
 echo ========================================
-echo    FaceRecoTrackService 打包脚本
+echo    FaceTrackService 打包脚本
 echo ========================================
 echo.
 
@@ -11,7 +11,7 @@ echo.
 set PROJECT_DIR=FaceRecoTrackService
 set PROJECT_FILE=%PROJECT_DIR%\FaceRecoTrackService.csproj
 set OUTPUT_DIR=dist
-set PUBLISH_DIR=%OUTPUT_DIR%\publish
+set PUBLISH_DIR=%OUTPUT_DIR%\FaceTrackService
 for /f %%i in ('powershell -NoProfile -Command "(Get-Date).ToString(\"yyyyMMdd_HHmmss\")"') do set BUILD_VERSION=%%i
 
 :: 检查项目文件是否存在
@@ -22,7 +22,7 @@ if not exist "%PROJECT_FILE%" (
 )
 
 :: 清理旧的输出目录
-echo [1/5] 清理旧的输出目录...
+echo [1/6] 清理旧的输出目录...
 if exist "%OUTPUT_DIR%" (
     rmdir /s /q "%OUTPUT_DIR%"
 )
@@ -30,7 +30,7 @@ mkdir "%OUTPUT_DIR%"
 mkdir "%PUBLISH_DIR%"
 
 :: 还原 NuGet 包
-echo [2/5] 还原 NuGet 包...
+echo [2/6] 还原 NuGet 包...
 dotnet restore "%PROJECT_FILE%"
 if errorlevel 1 (
     echo [错误] NuGet 包还原失败
@@ -39,7 +39,7 @@ if errorlevel 1 (
 )
 
 :: 发布项目（单文件）
-echo [3/5] 发布项目（单文件模式）...
+echo [3/6] 发布项目（单文件模式）...
 dotnet publish "%PROJECT_FILE%" ^
     --configuration Release ^
     --runtime win-x64 ^
@@ -58,7 +58,7 @@ if errorlevel 1 (
 )
 
 :: 复制 res 文件夹
-echo [4/5] 复制 res 文件夹...
+echo [4/6] 复制 res 文件夹...
 if exist "%PROJECT_DIR%\res" (
     xcopy /E /I /Y "%PROJECT_DIR%\res" "%PUBLISH_DIR%\res"
     if errorlevel 1 (
@@ -70,13 +70,33 @@ if exist "%PROJECT_DIR%\res" (
     echo [警告] res 文件夹不存在，跳过复制
 )
 
+:: 校验程序图标
+if exist "%PROJECT_DIR%\res\icon\FaceTrack.png" (
+    echo [成功] 已检测到程序图标: res\icon\FaceTrack.png
+) else (
+    echo [警告] 未检测到程序图标: res\icon\FaceTrack.png
+)
+
 :: 复制配置文件
-echo [5/5] 复制配置文件...
+echo [5/6] 复制配置文件...
 if exist "%PROJECT_DIR%\appsettings.json" (
     copy /Y "%PROJECT_DIR%\appsettings.json" "%PUBLISH_DIR%\"
 )
 if exist "%PROJECT_DIR%\appsettings.Development.json" (
     copy /Y "%PROJECT_DIR%\appsettings.Development.json" "%PUBLISH_DIR%\"
+)
+
+:: 复制服务脚本
+echo [6/6] 复制服务脚本...
+if exist "scripts" (
+    xcopy /E /I /Y "scripts" "%PUBLISH_DIR%\scripts"
+    if errorlevel 1 (
+        echo [警告] scripts 文件夹复制可能不完整
+    ) else (
+        echo [成功] scripts 文件夹已复制
+    )
+) else (
+    echo [警告] scripts 文件夹不存在，跳过复制
 )
 
 :: 创建发布信息文件
@@ -93,7 +113,7 @@ echo    打包完成！
 echo ========================================
 echo.
 echo 发布目录: %CD%\%PUBLISH_DIR%
-echo 主程序: FaceRecoTrackService.exe
+echo 主程序: FaceTrackService.exe
 echo.
 echo 文件列表:
 dir /B "%PUBLISH_DIR%"
@@ -101,7 +121,7 @@ echo.
 echo 提示: 
 echo   1. 确保 res 文件夹已正确复制
 echo   2. 根据实际情况修改 appsettings.json 配置
-echo   3. 运行 FaceRecoTrackService.exe 启动服务
+echo   3. 运行 FaceTrackService.exe 启动服务
 echo.
 
 pause

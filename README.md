@@ -161,8 +161,8 @@ FaceRecoTrackService 是一个基于 .NET 8.0 开发的高性能人脸识别与�
    build.bat
    ```
 
-2. 打包完成后，在 `dist/publish/` 目录下找到：
-   - `FaceRecoTrackService.exe` - 单文件可执行程序
+2. 打包完成后，在 `dist/FaceTrackService/` 目录下找到：
+   - `FaceTrackService.exe` - 单文件可执行程序
    - `res/` - 模型文件目录
    - `appsettings.json` - 配置文件
 
@@ -175,7 +175,7 @@ dotnet publish FaceRecoTrackService/FaceRecoTrackService.csproj ^
     --configuration Release ^
     --runtime win-x64 ^
     --self-contained true ^
-    --output dist/publish ^
+    --output dist/FaceTrackService ^
     /p:PublishSingleFile=true ^
     /p:IncludeNativeLibrariesForSelfExtract=true ^
     /p:EnableCompressionInSingleFile=true
@@ -185,13 +185,17 @@ dotnet publish FaceRecoTrackService/FaceRecoTrackService.csproj ^
 
 1. **直接运行**
    ```batch
-   cd dist/publish
-   FaceRecoTrackService.exe
+   cd dist/FaceTrackService
+   FaceTrackService.exe
    ```
 
 2. **作为 Windows 服务运行**（需要额外配置）
-   - 使用 NSSM 或 Windows Service Wrapper
-   - 或使用 .NET Worker Service 模板
+   - 使用脚本（在发布目录 `scripts/` 下）：
+     - `register-service.bat` - 注册服务
+     - `service-status.bat` - 查看服务状态
+     - `stop-service.bat` - 关闭服务
+     - `restart-service.bat` - 重启服务
+   - 或使用 NSSM / Windows Service Wrapper
 
 3. **访问 API 文档**
    - 开发环境：http://localhost:5000/swagger

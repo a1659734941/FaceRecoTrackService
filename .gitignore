@@ -487,3 +487,5 @@ FaceRecoTrackService/obj/Release/net8.0/win-x64/swae.publish.ex.cache
 FaceRecoTrackService/obj/Release/net8.0/win-x64/ref/FaceRecoTrackService.dll
 FaceRecoTrackService/obj/Release/net8.0/win-x64/refint/FaceRecoTrackService.dll
 dist/人脸轨迹服务.zip
+dist/publish/res/model/ArcFace.onnx
+FaceRecoTrackService/bin/Release/net8.0/win-x64/res/model/ArcFace.onnx
