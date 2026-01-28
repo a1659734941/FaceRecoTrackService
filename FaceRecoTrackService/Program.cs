@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Qdrant.Client.Grpc;
 using Serilog;
 using Serilog.Events;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 var builder = WebApplication.CreateBuilder(args);
@@ -89,6 +90,39 @@ builder.Services.AddHostedService<FtpRecognitionWorker>();
 
 var app = builder.Build();
 
+var qdrantConfig = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<QdrantConfig>>().Value;
+Process? qdrantProcess = null;
+try
+{
+    qdrantProcess = await QdrantEmbeddedBootstrapper.EnsureStartedAsync(
+        qdrantConfig,
+        app.Logger,
+        app.Lifetime.ApplicationStopping);
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "内置Qdrant启动失败");
+    throw;
+}
+
+if (qdrantProcess != null)
+{
+    app.Lifetime.ApplicationStopping.Register(() =>
+    {
+        try
+        {
+            if (!qdrantProcess.HasExited)
+            {
+                qdrantProcess.Kill(true);
+            }
+        }
+        catch
+        {
+            // 忽略停止异常
+        }
+    });
+}
+
 using (var scope = app.Services.CreateScope())
 {
     var initializer = scope.ServiceProvider.GetRequiredService<PgSchemaInitializer>();
@@ -96,11 +130,10 @@ using (var scope = app.Services.CreateScope())
 
     var qdrant = scope.ServiceProvider.GetRequiredService<QdrantVectorManager>();
     var faceOptions = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<FaceRecognitionOptions>>().Value;
-    var qdrantOptions = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<QdrantConfig>>().Value;
     await qdrant.EnsureCollectionAsync(
-        qdrantOptions.CollectionName,
+        qdrantConfig.CollectionName,
         faceOptions.VectorSize,
-        qdrantOptions.RecreateOnVectorSizeMismatch,
+        qdrantConfig.RecreateOnVectorSizeMismatch,
         Distance.Cosine,
         cancellationToken: app.Lifetime.ApplicationStopping);
 }
