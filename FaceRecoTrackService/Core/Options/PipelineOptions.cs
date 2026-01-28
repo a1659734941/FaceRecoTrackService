@@ -3,6 +3,8 @@ namespace FaceRecoTrackService.Core.Options
     public class PipelineOptions
     {
         public int PollIntervalMs { get; set; } = 2000;
+        public int SnapshotWorkerCount { get; set; } = 2;
+        public int SnapshotQueueSize { get; set; } = 200;
         public int MinFaceCount { get; set; } = 1;
         public int TopK { get; set; } = 5;
         public float SimilarityThreshold { get; set; } = 0.87f;

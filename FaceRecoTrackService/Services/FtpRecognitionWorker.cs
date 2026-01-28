@@ -2,11 +2,12 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using FaceRecoTrackService.Core.Algorithms;
 using FaceRecoTrackService.Core.Options;
 using FaceRecoTrackService.Infrastructure.External;
-using FaceRecoTrackService.Utils.QdrantUtil;
+using FaceRecoTrackService.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -19,10 +20,7 @@ namespace FaceRecoTrackService.Services
     {
         private readonly PipelineOptions _pipelineOptions;
         private readonly FtpFolderOptions _ftpOptions;
-        private readonly PayloadMappingOptions _payloadMapping;
         private readonly FaceRecognitionOptions _faceOptions;
-        private readonly QdrantConfig _qdrantConfig;
-        private readonly QdrantVectorManager _qdrantManager;
         private readonly FtpFolderSnapshotClient _snapshotClient;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<FtpRecognitionWorker> _logger;
@@ -30,19 +28,13 @@ namespace FaceRecoTrackService.Services
         public FtpRecognitionWorker(
             IOptions<PipelineOptions> pipelineOptions,
             IOptions<FtpFolderOptions> ftpOptions,
-            IOptions<PayloadMappingOptions> payloadMapping,
             IOptions<FaceRecognitionOptions> faceOptions,
-            IOptions<QdrantConfig> qdrantConfig,
-            QdrantVectorManager qdrantManager,
             IServiceScopeFactory scopeFactory,
             ILogger<FtpRecognitionWorker> logger)
         {
             _pipelineOptions = pipelineOptions.Value;
             _ftpOptions = ftpOptions.Value;
-            _payloadMapping = payloadMapping.Value;
             _faceOptions = faceOptions.Value;
-            _qdrantConfig = qdrantConfig.Value;
-            _qdrantManager = qdrantManager;
             _snapshotClient = new FtpFolderSnapshotClient();
             _scopeFactory = scopeFactory;
             _logger = logger;
@@ -51,26 +43,80 @@ namespace FaceRecoTrackService.Services
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             Directory.CreateDirectory(_pipelineOptions.SnapshotSaveDir);
-            using var faceDetector = new FaceDetector(_faceOptions);
-            using var featureExtractor = new FaceFeatureService(_faceOptions.FaceNetModelPath);
+            var workerCount = Math.Max(1, _pipelineOptions.SnapshotWorkerCount);
+            var queueSize = Math.Max(10, _pipelineOptions.SnapshotQueueSize);
+            var channel = Channel.CreateBounded<FolderSnapshotResult>(
+                new BoundedChannelOptions(queueSize)
+                {
+                    FullMode = BoundedChannelFullMode.Wait,
+                    SingleWriter = true,
+                    SingleReader = false
+                });
 
-            _logger.LogInformation("开始监听FTP目录：{Path}，轮询间隔：{Interval}ms", _ftpOptions.Path, _pipelineOptions.PollIntervalMs);
-            while (!stoppingToken.IsCancellationRequested)
+            var workers = new Task[workerCount];
+            for (int i = 0; i < workerCount; i++)
             {
-                try
+                workers[i] = Task.Run(() => WorkerLoopAsync(channel.Reader, stoppingToken), stoppingToken);
+            }
+
+            _logger.LogInformation(
+                "开始监听FTP目录：{Path}，轮询间隔：{Interval}ms，工作线程：{Workers}，队列容量：{QueueSize}",
+                _ftpOptions.Path,
+                _pipelineOptions.PollIntervalMs,
+                workerCount,
+                queueSize);
+            try
+            {
+                while (!stoppingToken.IsCancellationRequested)
                 {
                     var snapshots = await _snapshotClient.FetchNewSnapshotsAsync(_ftpOptions, stoppingToken);
                     foreach (var snapshot in snapshots)
                     {
-                        await ProcessSnapshotAsync(snapshot, faceDetector, featureExtractor, stoppingToken);
+                        await channel.Writer.WriteAsync(snapshot, stoppingToken);
+                    }
+
+                    await Task.Delay(_pipelineOptions.PollIntervalMs, stoppingToken);
+                }
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                // 正常停止
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理FTP目录时发生异常");
+            }
+            finally
+            {
+                channel.Writer.TryComplete();
+                await Task.WhenAll(workers);
+            }
+        }
+
+        private async Task WorkerLoopAsync(
+            ChannelReader<FolderSnapshotResult> reader,
+            CancellationToken cancellationToken)
+        {
+            using var faceDetector = new FaceDetector(_faceOptions);
+            using var featureExtractor = new FaceFeatureService(_faceOptions);
+
+            while (await reader.WaitToReadAsync(cancellationToken))
+            {
+                while (reader.TryRead(out var snapshot))
+                {
+                    try
+                    {
+                        await ProcessSnapshotAsync(snapshot, faceDetector, featureExtractor, cancellationToken);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "处理快照失败：{FilePath}", snapshot?.FilePath);
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "处理FTP目录时发生异常");
-                }
-
-                await Task.Delay(_pipelineOptions.PollIntervalMs, stoppingToken);
             }
         }
 
@@ -100,10 +146,11 @@ namespace FaceRecoTrackService.Services
                 var validFaces = faceDetector.CropAndFilterSharpFaces(snapshotImage, detections);
                 using var scope = _scopeFactory.CreateScope();
                 var trackRecordService = scope.ServiceProvider.GetRequiredService<TrackRecordService>();
+                var faceRepository = scope.ServiceProvider.GetRequiredService<PgFaceRepository>();
                 foreach (var faceImage in validFaces.Values)
                 {
                     // 提取向量并进行相似度检索
-                    var match = await MatchFaceAsync(featureExtractor, faceImage, cancellationToken);
+                    var match = await MatchFaceAsync(featureExtractor, faceRepository, faceImage, cancellationToken);
                     if (match == null) continue;
 
                     await trackRecordService.HandleTrackAsync(
@@ -123,6 +170,7 @@ namespace FaceRecoTrackService.Services
 
         private async Task<MatchResult?> MatchFaceAsync(
             FaceFeatureService featureExtractor,
+            PgFaceRepository faceRepository,
             SKImage faceImage,
             CancellationToken cancellationToken)
         {
@@ -139,49 +187,34 @@ namespace FaceRecoTrackService.Services
                 vector = FaceFeatureService.ResizeVector(vector, _faceOptions.VectorSize);
             }
 
-            var results = await _qdrantManager.SearchAsync(
-                _qdrantConfig.CollectionName,
-                vector,
-                limit: _pipelineOptions.TopK,
-                scoreThreshold: _pipelineOptions.SimilarityThreshold,
-                cancellationToken: cancellationToken);
+            var candidates = await faceRepository.GetAllFaceVectorsAsync(cancellationToken);
+            if (candidates == null || candidates.Count == 0)
+                return null;
 
-            var top = results?.FirstOrDefault();
-            if (top == null)
+            float bestScore = float.MinValue;
+            Guid bestId = Guid.Empty;
+            foreach (var candidate in candidates)
             {
-                var fallbackResults = await _qdrantManager.SearchAsync(
-                    _qdrantConfig.CollectionName,
-                    vector,
-                    limit: _pipelineOptions.TopK,
-                    scoreThreshold: null,
-                    cancellationToken: cancellationToken);
+                if (candidate.Vector == null || candidate.Vector.Length == 0)
+                    continue;
+                if (candidate.Vector.Length != vector.Length)
+                    continue;
 
-                var fallbackTop = fallbackResults?.FirstOrDefault();
-                if (fallbackTop == null || fallbackTop.Score < _pipelineOptions.FallbackSimilarityThreshold)
-                    return null;
-
-                top = fallbackTop;
+                var score = featureExtractor.CalculateSimilarity(vector, candidate.Vector);
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestId = candidate.Id;
+                }
             }
 
-            var personId = GetPayloadValue(top.Payload, _payloadMapping.PersonIdKey);
-            if (!Guid.TryParse(personId, out var guid)) return null;
+            if (bestScore >= _pipelineOptions.SimilarityThreshold && bestId != Guid.Empty)
+                return new MatchResult { PersonId = bestId, Score = bestScore };
 
-            return new MatchResult
-            {
-                PersonId = guid,
-                Score = top.Score
-            };
-        }
+            if (bestScore >= _pipelineOptions.FallbackSimilarityThreshold && bestId != Guid.Empty)
+                return new MatchResult { PersonId = bestId, Score = bestScore };
 
-        private static string GetPayloadValue(
-            System.Collections.Generic.IReadOnlyDictionary<string, Qdrant.Client.Grpc.Value> payload,
-            string key)
-        {
-            if (payload == null || string.IsNullOrWhiteSpace(key)) return "";
-            if (!payload.TryGetValue(key, out var value)) return "";
-            if (value.KindCase == Qdrant.Client.Grpc.Value.KindOneofCase.StringValue)
-                return value.StringValue ?? "";
-            return value.ToString();
+            return null;
         }
 
         private void TryDeleteSnapshotFile(string filePath)

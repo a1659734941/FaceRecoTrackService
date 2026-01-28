@@ -1,8 +1,10 @@
 using System;
 using System.Threading;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FaceRecoTrackService.Core.Models;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace FaceRecoTrackService.Infrastructure.Repositories
 {
@@ -18,8 +20,8 @@ namespace FaceRecoTrackService.Infrastructure.Repositories
         public async Task InsertFaceAsync(FacePerson person, CancellationToken cancellationToken)
         {
             const string sql = @"
-INSERT INTO face_persons(id, user_name, ip, description, is_test, image_base64, created_at)
-VALUES (@id, @user_name, @ip, @description, @is_test, @image_base64, @created_at);";
+INSERT INTO face_persons(id, user_name, ip, description, is_test, image_base64, face_vector, created_at)
+VALUES (@id, @user_name, @ip, @description, @is_test, @image_base64, @face_vector, @created_at);";
 
             await using var conn = new NpgsqlConnection(_connectionString);
             await conn.OpenAsync(cancellationToken);
@@ -30,6 +32,8 @@ VALUES (@id, @user_name, @ip, @description, @is_test, @image_base64, @created_at
             cmd.Parameters.AddWithValue("description", (object?)person.Description ?? DBNull.Value);
             cmd.Parameters.AddWithValue("is_test", person.IsTest);
             cmd.Parameters.AddWithValue("image_base64", (object?)person.ImageBase64 ?? DBNull.Value);
+            var vectorParam = cmd.Parameters.Add("face_vector", NpgsqlDbType.Array | NpgsqlDbType.Real);
+            vectorParam.Value = (object?)person.FaceVector ?? DBNull.Value;
             cmd.Parameters.AddWithValue("created_at", person.CreatedAtUtc);
             await cmd.ExecuteNonQueryAsync(cancellationToken);
         }
@@ -68,6 +72,33 @@ FROM face_persons WHERE id = @id;";
                 ImageBase64 = reader.IsDBNull(5) ? null : reader.GetString(5),
                 CreatedAtUtc = reader.GetDateTime(6)
             };
+        }
+
+        public async Task<IReadOnlyList<FaceVectorRecord>> GetAllFaceVectorsAsync(CancellationToken cancellationToken)
+        {
+            const string sql = @"
+SELECT id, user_name, face_vector
+FROM face_persons
+WHERE face_vector IS NOT NULL;";
+
+            var results = new List<FaceVectorRecord>();
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync(cancellationToken);
+            await using var cmd = new NpgsqlCommand(sql, conn);
+
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                var vector = reader.IsDBNull(2) ? Array.Empty<float>() : (float[])reader.GetValue(2);
+                results.Add(new FaceVectorRecord
+                {
+                    Id = reader.GetGuid(0),
+                    UserName = reader.GetString(1),
+                    Vector = vector
+                });
+            }
+
+            return results;
         }
 
         public async Task<bool> DeleteFaceByIdAsync(Guid id, CancellationToken cancellationToken)

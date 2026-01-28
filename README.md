@@ -2,13 +2,13 @@
 
 ## 📋 产品介绍
 
-FaceRecoTrackService 是一个基于 .NET 8.0 开发的高性能人脸识别与追踪服务系统。该系统集成了深度学习模型（YOLOv8 人脸检测 + FaceNet 特征提取）、向量数据库（Qdrant）和关系型数据库（PostgreSQL），实现了完整的人脸注册、识别和轨迹追踪功能。
+FaceRecoTrackService 是一个基于 .NET 8.0 开发的高性能人脸识别与追踪服务系统。该系统集成了深度学习模型（YOLOv8 人脸检测 + ArcFace 特征提取）、向量数据库（Qdrant）和关系型数据库（PostgreSQL），实现了完整的人脸注册、识别和轨迹追踪功能。识别阶段默认采用本地余弦相似度比对（不依赖 Qdrant 相似度检索）。
 
 ### 核心特性
 
 - **高精度人脸检测**：基于 YOLOv8s-face 模型，支持实时人脸检测
-- **特征向量提取**：使用 FaceNet Inception ResNetV1 模型提取 128 维特征向量
-- **向量相似度检索**：集成 Qdrant 向量数据库，支持高效的相似度搜索
+- **特征向量提取**：使用 ArcFace 模型提取 512 维特征向量
+- **相似度比对**：本地余弦相似度比对（从 PostgreSQL 读取向量）
 - **实时监控识别**：通过 FTP 文件夹监控，自动处理新的人脸快照
 - **轨迹追踪记录**：记录人员在不同摄像头间的移动轨迹和时间信息
 - **清晰度筛选**：自动过滤模糊人脸，确保识别质量
@@ -47,7 +47,7 @@ FaceRecoTrackService 是一个基于 .NET 8.0 开发的高性能人脸识别与�
 3. **准备模型文件**
    - 确保 `res/model/` 目录包含以下模型文件：
      - `yolov8s-face.onnx` - 人脸检测模型
-     - `facenet_inception_resnetv1.onnx` - 人脸特征提取模型
+    - `arcface.onnx` - 人脸特征提取模型（112x112 输入，512 维输出）
 
 ### 配置说明
 
@@ -68,18 +68,25 @@ FaceRecoTrackService 是一个基于 .NET 8.0 开发的高性能人脸识别与�
   },
   "FaceRecognition": {
     "YoloModelPath": "res/model/yolov8s-face.onnx",
-    "FaceNetModelPath": "res/model/facenet_inception_resnetv1.onnx",
+    "FaceNetModelPath": "res/model/arcface.onnx",
     "DetectionConfidence": 0.45,
     "IouThreshold": 0.45,
     "FaceExpandRatio": 20,
     "BaseSharpnessThreshold": 15.0,
     "SizeThresholdCoefficient": 0.0002,
-    "VectorSize": 128,
+    "VectorSize": 512,
+    "FeatureInputWidth": 112,
+    "FeatureInputHeight": 112,
+    "EnableHistogramEqualization": false,
+    "OnnxIntraOpNumThreads": 0,
+    "OnnxInterOpNumThreads": 0,
     "EnableDebugSaveFaces": false,
     "DebugSaveDir": "snapshots/registrations"
   },
   "Pipeline": {
     "PollIntervalMs": 2000,
+    "SnapshotWorkerCount": 2,
+    "SnapshotQueueSize": 200,
     "MinFaceCount": 1,
     "TopK": 5,
     "SimilarityThreshold": 0.87,
@@ -112,20 +119,27 @@ FaceRecoTrackService 是一个基于 .NET 8.0 开发的高性能人脸识别与�
 
 - `FaceRecognition`
 - `FaceRecognition.YoloModelPath`：YOLO 人脸检测模型文件路径。
-- `FaceRecognition.FaceNetModelPath`：FaceNet 特征提取模型文件路径。
+- `FaceRecognition.FaceNetModelPath`：特征提取模型文件路径（ArcFace）。
 - `FaceRecognition.DetectionConfidence`：人脸检测置信度阈值（越大越严格）。
 - `FaceRecognition.IouThreshold`：NMS 交并比阈值。
 - `FaceRecognition.FaceExpandRatio`：人脸裁剪时向外扩展像素数。
 - `FaceRecognition.BaseSharpnessThreshold`：基础清晰度阈值（拉普拉斯方差基准）。
 - `FaceRecognition.SizeThresholdCoefficient`：清晰度动态阈值系数（随人脸尺寸变化）。
 - `FaceRecognition.VectorSize`：特征向量维度（需与模型输出一致）。
+- `FaceRecognition.FeatureInputWidth`：特征模型输入宽度（ArcFace 默认 112）。
+- `FaceRecognition.FeatureInputHeight`：特征模型输入高度（ArcFace 默认 112）。
+- `FaceRecognition.EnableHistogramEqualization`：是否启用直方图均衡化（ArcFace 通常关闭）。
+- `FaceRecognition.OnnxIntraOpNumThreads`：ONNX IntraOp 线程数（0 为默认）。
+- `FaceRecognition.OnnxInterOpNumThreads`：ONNX InterOp 线程数（0 为默认）。
 - `FaceRecognition.EnableDebugSaveFaces`：是否保存调试用的人脸裁剪图片。
 - `FaceRecognition.DebugSaveDir`：调试人脸图片保存目录。
 
 - `Pipeline`
 - `Pipeline.PollIntervalMs`：FTP 目录轮询间隔（毫秒）。
 - `Pipeline.MinFaceCount`：图片中最少人脸数量要求。
-- `Pipeline.TopK`：相似度检索返回的 TopK 数量。
+- `Pipeline.SnapshotWorkerCount`：并行处理快照的工作线程数。
+- `Pipeline.SnapshotQueueSize`：快照处理队列容量。
+- `Pipeline.TopK`：相似度检索返回的 TopK 数量（若启用向量库检索）。
 - `Pipeline.SimilarityThreshold`：主相似度阈值（用于判定同一人）。
 - `Pipeline.FallbackSimilarityThreshold`：备用相似度阈值（主阈值无结果时使用）。
 - `Pipeline.SnapshotSaveDir`：快照保存目录。
@@ -192,8 +206,8 @@ dotnet publish FaceRecoTrackService/FaceRecoTrackService.csproj ^
 通过 API 接口注册新的人脸信息，系统会：
 - 检测图片中的人脸
 - 筛选清晰的人脸（基于拉普拉斯方差）
-- 提取人脸特征向量（128 维）
-- 将信息存储到 PostgreSQL 和 Qdrant
+- 提取人脸特征向量（512 维）
+- 将信息存储到 PostgreSQL（含向量）和 Qdrant
 
 **API 端点**：`POST /api/face/register`
 
@@ -224,13 +238,13 @@ dotnet publish FaceRecoTrackService/FaceRecoTrackService.csproj ^
 系统通过后台服务 `FtpRecognitionWorker` 持续监控指定文件夹：
 - 轮询间隔：默认 2000ms（可配置）
 - 自动检测新的人脸快照文件
-- 提取人脸特征并与已注册人脸进行相似度匹配
+- 提取人脸特征并与已注册人脸进行本地相似度匹配（余弦相似度）
 - 记录识别结果到轨迹表
 
 **工作流程**：
 1. 监控 `FtpFolder.Path` 目录下的图片文件
 2. 检测图片中的人脸
-3. 提取特征向量并在 Qdrant 中搜索相似人脸
+3. 从 PostgreSQL 读取已注册向量并计算相似度
 4. 如果相似度超过阈值，记录轨迹信息
 5. 处理完成后可选择删除已处理的快照文件
 
@@ -356,7 +370,7 @@ FaceRecoTrackService/
 ├── res/                      # 资源文件
 │   └── model/                # AI 模型文件
 │       ├── yolov8s-face.onnx
-│       └── facenet_inception_resnetv1.onnx
+│       └── arcface.onnx
 ├── Program.cs                # 程序入口
 └── appsettings.json          # 配置文件
 ```
@@ -370,7 +384,7 @@ FaceRecoTrackService/
   - `CropAndFilterSharpFaces()` - 裁剪人脸并筛选清晰的人脸
 
 #### 2. FaceFeatureService（特征提取服务）
-- **功能**：使用 FaceNet 模型提取人脸特征向量
+- **功能**：使用 ArcFace 模型提取人脸特征向量（默认 112x112 输入、512 维输出）
 - **主要方法**：
   - `ExtractFeaturesFromStream(Stream imageStream)` - 从流中提取特征向量
   - `ExtractFeatures(string imagePath)` - 从文件路径提取特征向量
@@ -388,7 +402,7 @@ FaceRecoTrackService/
   1. 定期扫描配置的文件夹
   2. 检测新文件并读取图片
   3. 使用 FaceDetector 检测人脸
-  4. 提取特征并在 Qdrant 中搜索匹配
+  4. 提取特征并在 PostgreSQL 中进行本地相似度匹配
   5. 记录轨迹信息到数据库
 
 #### 5. QdrantVectorManager（向量数据库管理器）
@@ -396,7 +410,7 @@ FaceRecoTrackService/
 - **主要操作**：
   - 创建/确保集合存在
   - 插入/更新向量点
-  - 相似度搜索
+  - 删除/计数（相似度搜索可选）
 
 ---
 
@@ -434,7 +448,7 @@ FaceRecoTrackService/
 
 确保以下模型文件存在于 `res/model/` 目录：
 - `yolov8s-face.onnx` - 人脸检测模型（约 20-30MB）
-- `facenet_inception_resnetv1.onnx` - 特征提取模型（约 90-100MB）
+- `arcface.onnx` - 特征提取模型（约 90-100MB）
 
 #### 4. 配置文件调整
 
@@ -492,6 +506,7 @@ FaceRecoTrackService/
 | description | text | NULL | 描述信息 |
 | is_test | boolean | NOT NULL | 是否测试数据 |
 | image_base64 | text | NULL | 原始人脸 Base64 |
+| face_vector | real[] | NULL | 人脸特征向量 |
 | created_at | timestamptz | NOT NULL | 创建时间 |
 
 ### 2) camera_mapping（摄像头映射）
@@ -540,13 +555,18 @@ FaceRecoTrackService/
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | YoloModelPath | string | "res/model/yolov8s-face.onnx" | YOLO 人脸检测模型路径 |
-| FaceNetModelPath | string | "res/model/facenet_inception_resnetv1.onnx" | FaceNet 特征提取模型路径 |
+| FaceNetModelPath | string | "res/model/arcface.onnx" | ArcFace 特征提取模型路径 |
 | DetectionConfidence | float | 0.45 | 人脸检测置信度阈值 |
 | IouThreshold | float | 0.45 | NMS 交并比阈值 |
 | FaceExpandRatio | int | 20 | 人脸裁剪扩展像素数 |
 | BaseSharpnessThreshold | double | 15.0 | 基础清晰度阈值 |
 | SizeThresholdCoefficient | double | 0.0002 | 尺寸阈值系数 |
-| VectorSize | int | 128 | 特征向量维度 |
+| VectorSize | int | 512 | 特征向量维度 |
+| FeatureInputWidth | int | 112 | 特征模型输入宽度 |
+| FeatureInputHeight | int | 112 | 特征模型输入高度 |
+| EnableHistogramEqualization | bool | false | 是否启用直方图均衡化 |
+| OnnxIntraOpNumThreads | int | 0 | ONNX IntraOp 线程数 |
+| OnnxInterOpNumThreads | int | 0 | ONNX InterOp 线程数 |
 | EnableDebugSaveFaces | bool | false | 是否保存调试人脸图片 |
 | DebugSaveDir | string | "snapshots/registrations" | 调试图片保存目录 |
 
@@ -555,8 +575,10 @@ FaceRecoTrackService/
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | PollIntervalMs | int | 2000 | FTP 文件夹轮询间隔（毫秒） |
+| SnapshotWorkerCount | int | 2 | 识别工作线程数 |
+| SnapshotQueueSize | int | 200 | 快照处理队列容量 |
 | MinFaceCount | int | 1 | 最少人脸数量要求 |
-| TopK | int | 5 | 相似度搜索返回的 Top K 结果 |
+| TopK | int | 5 | 相似度搜索返回的 Top K 结果（启用向量库检索时） |
 | SimilarityThreshold | float | 0.87 | 主要相似度阈值 |
 | FallbackSimilarityThreshold | float | 0.78 | 备用相似度阈值 |
 | SnapshotSaveDir | string | "snapshots" | 快照保存目录 |
@@ -670,9 +692,9 @@ FaceRecoTrackService/
    - 为常用查询字段添加索引
    - 使用连接池管理数据库连接
 
-3. **向量搜索优化**：
-   - 合理设置 `TopK` 参数
-   - 使用适当的相似度阈值减少搜索范围
+3. **相似度匹配优化**：
+   - 合理设置 `SimilarityThreshold` 与 `FallbackSimilarityThreshold`
+   - 识别量大时可缓存已注册向量，减少频繁读库
 
 ---
 

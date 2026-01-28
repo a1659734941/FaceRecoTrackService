@@ -26,8 +26,12 @@ CREATE TABLE IF NOT EXISTS face_persons (
     description text,
     is_test boolean NOT NULL,
     image_base64 text,
+    face_vector real[],
     created_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE face_persons
+    ADD COLUMN IF NOT EXISTS face_vector real[];
 
 CREATE TABLE IF NOT EXISTS camera_mapping (
     snap_camera_ip text PRIMARY KEY,

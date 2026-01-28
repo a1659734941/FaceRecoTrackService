@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
+using FaceRecoTrackService.Core.Options;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 
@@ -14,19 +15,32 @@ namespace FaceRecoTrackService.Core.Algorithms
     /// </summary>
     public class FaceFeatureService : IDisposable
     {
-        private const int InputWidth = 160;
-        private const int InputHeight = 160;
         private const int InputChannels = 3;
 
         private readonly InferenceSession _onnxSession;
+        private readonly FaceRecognitionOptions _config;
+        private readonly int _inputWidth;
+        private readonly int _inputHeight;
+        private readonly string _inputName;
         private bool _disposed;
 
-        public FaceFeatureService(string onnxModelPath)
+        public FaceFeatureService(FaceRecognitionOptions options)
         {
-            if (string.IsNullOrEmpty(onnxModelPath))
-                throw new ArgumentNullException(nameof(onnxModelPath), "模型路径不能为空");
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (string.IsNullOrEmpty(options.FaceNetModelPath))
+                throw new ArgumentNullException(nameof(options.FaceNetModelPath), "模型路径不能为空");
 
-            _onnxSession = new InferenceSession(onnxModelPath);
+            var sessionOptions = new Microsoft.ML.OnnxRuntime.SessionOptions();
+            if (options.OnnxIntraOpNumThreads > 0)
+                sessionOptions.IntraOpNumThreads = options.OnnxIntraOpNumThreads;
+            if (options.OnnxInterOpNumThreads > 0)
+                sessionOptions.InterOpNumThreads = options.OnnxInterOpNumThreads;
+
+            _onnxSession = new InferenceSession(options.FaceNetModelPath, sessionOptions);
+            _config = options;
+            _inputWidth = Math.Max(1, options.FeatureInputWidth);
+            _inputHeight = Math.Max(1, options.FeatureInputHeight);
+            _inputName = _onnxSession.InputMetadata.Keys.FirstOrDefault() ?? "input";
         }
 
         /// <summary>
@@ -39,11 +53,11 @@ namespace FaceRecoTrackService.Core.Algorithms
                 throw new InvalidOperationException($"图片加载失败：{imagePath}");
 
             float[] inputData = PreprocessImage(image);
-            var inputTensor = new DenseTensor<float>(inputData, new[] { 1, InputChannels, InputHeight, InputWidth });
+            var inputTensor = new DenseTensor<float>(inputData, new[] { 1, InputChannels, _inputHeight, _inputWidth });
 
             using var results = _onnxSession.Run(new List<NamedOnnxValue>
             {
-                NamedOnnxValue.CreateFromTensor("input", inputTensor)
+                NamedOnnxValue.CreateFromTensor(_inputName, inputTensor)
             });
 
             return results.First().AsTensor<float>().ToArray();
@@ -84,11 +98,11 @@ namespace FaceRecoTrackService.Core.Algorithms
             CvInvoke.CvtColor(mat, rgbImage, ColorConversion.Bgr2Rgb);
 
             float[] inputData = PreprocessImage(rgbImage);
-            var inputTensor = new DenseTensor<float>(inputData, new[] { 1, InputChannels, InputHeight, InputWidth });
+            var inputTensor = new DenseTensor<float>(inputData, new[] { 1, InputChannels, _inputHeight, _inputWidth });
 
             using var results = _onnxSession.Run(new List<NamedOnnxValue>
             {
-                NamedOnnxValue.CreateFromTensor("input", inputTensor)
+                NamedOnnxValue.CreateFromTensor(_inputName, inputTensor)
             });
 
             return results.First().AsTensor<float>().ToArray();
@@ -119,17 +133,24 @@ namespace FaceRecoTrackService.Core.Algorithms
         private float[] PreprocessImage(Mat rgbImage)
         {
             using var resized = new Mat();
-            CvInvoke.Resize(rgbImage, resized, new System.Drawing.Size(InputWidth, InputHeight), interpolation: Inter.Linear);
+            CvInvoke.Resize(
+                rgbImage,
+                resized,
+                new System.Drawing.Size(_inputWidth, _inputHeight),
+                interpolation: Inter.Linear);
 
-            using var gray = new Mat();
-            CvInvoke.CvtColor(resized, gray, ColorConversion.Rgb2Gray);
-            using var equalized = new Mat();
-            CvInvoke.EqualizeHist(gray, equalized);
-            CvInvoke.CvtColor(equalized, resized, ColorConversion.Gray2Rgb);
+            if (_config.EnableHistogramEqualization)
+            {
+                using var gray = new Mat();
+                CvInvoke.CvtColor(resized, gray, ColorConversion.Rgb2Gray);
+                using var equalized = new Mat();
+                CvInvoke.EqualizeHist(gray, equalized);
+                CvInvoke.CvtColor(equalized, resized, ColorConversion.Gray2Rgb);
+            }
 
             using var continuous = resized.IsContinuous ? resized : resized.Clone();
 
-            int totalBytes = InputWidth * InputHeight * InputChannels;
+            int totalBytes = _inputWidth * _inputHeight * InputChannels;
             byte[] bytes = new byte[totalBytes];
             Marshal.Copy(continuous.DataPointer, bytes, 0, totalBytes);
 
@@ -138,7 +159,7 @@ namespace FaceRecoTrackService.Core.Algorithms
 
         private float[] NormalizeToTensor(byte[] imageBytes)
         {
-            int pixelCount = InputWidth * InputHeight;
+            int pixelCount = _inputWidth * _inputHeight;
             var normalized = new float[InputChannels * pixelCount];
 
             for (int i = 0; i < pixelCount; i++)

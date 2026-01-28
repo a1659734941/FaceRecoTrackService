@@ -10,6 +10,11 @@ namespace FaceRecoTrackService.Core.Options
         public double BaseSharpnessThreshold { get; set; } = 35.0;
         public double SizeThresholdCoefficient { get; set; } = 0.0002;
         public int VectorSize { get; set; } = 512;
+        public int FeatureInputWidth { get; set; } = 160;
+        public int FeatureInputHeight { get; set; } = 160;
+        public bool EnableHistogramEqualization { get; set; } = true;
+        public int OnnxIntraOpNumThreads { get; set; } = 0;
+        public int OnnxInterOpNumThreads { get; set; } = 0;
         public bool EnableDebugSaveFaces { get; set; } = false;
         public string DebugSaveDir { get; set; } = "snapshots/registrations";
     }

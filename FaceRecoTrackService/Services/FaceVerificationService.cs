@@ -42,7 +42,7 @@ namespace FaceRecoTrackService.Services
             using var image1 = ImageUtils.LoadImage(bytes1);
             using var image2 = ImageUtils.LoadImage(bytes2);
             using var detector = new FaceDetector(_faceOptions);
-            using var featureExtractor = new FaceFeatureService(_faceOptions.FaceNetModelPath);
+            using var featureExtractor = new FaceFeatureService(_faceOptions);
 
             using var face1 = ExtractBestFace(image1, detector, "图片1", out var faceBase64_1);
             using var face2 = ExtractBestFace(image2, detector, "图片2", out var faceBase64_2);

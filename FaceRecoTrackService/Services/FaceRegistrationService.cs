@@ -86,7 +86,7 @@ namespace FaceRecoTrackService.Services
             encoded.SaveTo(stream);
             stream.Position = 0;
 
-            using var featureExtractor = new FaceFeatureService(_faceOptions.FaceNetModelPath);
+            using var featureExtractor = new FaceFeatureService(_faceOptions);
             var vector = featureExtractor.ExtractFeaturesFromStream(stream);
             if (vector == null || vector.Length == 0)
                 throw new InvalidOperationException("人脸特征提取失败：特征向量为空");
@@ -105,6 +105,7 @@ namespace FaceRecoTrackService.Services
                 Description = request.Description ?? "",
                 IsTest = request.IsTest,
                 ImageBase64 = request.Base64Image,
+                FaceVector = vector,
                 CreatedAtUtc = DateTime.UtcNow
             };
 
