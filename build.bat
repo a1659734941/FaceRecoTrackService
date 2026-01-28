@@ -71,10 +71,10 @@ if exist "%PROJECT_DIR%\res" (
 )
 
 :: 校验程序图标
-if exist "%PROJECT_DIR%\res\icon\FaceTrack.png" (
-    echo [成功] 已检测到程序图标: res\icon\FaceTrack.png
+if exist "%PROJECT_DIR%\res\icon\FaceTrack.ico" (
+    echo [成功] 已检测到程序图标: res\icon\FaceTrack.ico
 ) else (
-    echo [警告] 未检测到程序图标: res\icon\FaceTrack.png
+    echo [警告] 未检测到程序图标: res\icon\FaceTrack.ico
 )
 
 :: 复制配置文件

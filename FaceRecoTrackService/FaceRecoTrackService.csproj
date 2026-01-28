@@ -9,6 +9,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyName>FaceTrackService</AssemblyName>
     <RootNamespace>FaceRecoTrackService</RootNamespace>
+    <ApplicationIcon>res\icon\FaceTrack.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
