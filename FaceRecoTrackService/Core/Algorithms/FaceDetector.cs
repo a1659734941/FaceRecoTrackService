@@ -6,6 +6,7 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Dnn;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
+using Serilog;
 using SkiaSharp;
 using FaceRecoTrackService.Core.Options;
 
@@ -87,13 +88,13 @@ namespace FaceRecoTrackService.Core.Algorithms
 
                 if (croppedFace == null)
                 {
-                    Console.WriteLine($"人脸 {i} 裁剪失败，跳过");
+                    Log.Warning("人脸 {Index} 裁剪失败，跳过", i);
                     continue;
                 }
 
                 if (!SharpnessEvaluator.IsSharp(croppedFace, width, height, _config))
                 {
-                    Console.WriteLine($"人脸 {i} 模糊，跳过");
+                    Log.Warning("人脸 {Index} 模糊，跳过", i);
                     continue;
                 }
 
@@ -126,7 +127,7 @@ namespace FaceRecoTrackService.Core.Algorithms
 
                 if (croppedFace == null)
                 {
-                    Console.WriteLine($"人脸 {i} 裁剪失败，跳过");
+                    Log.Warning("人脸 {Index} 裁剪失败，跳过", i);
                     continue;
                 }
 
@@ -141,7 +142,7 @@ namespace FaceRecoTrackService.Core.Algorithms
 
                 if (!isSharp)
                 {
-                    Console.WriteLine($"人脸 {i} 模糊，跳过");
+                    Log.Warning("人脸 {Index} 模糊，跳过", i);
                     continue;
                 }
 
@@ -174,7 +175,7 @@ namespace FaceRecoTrackService.Core.Algorithms
             int validHeight = bottom - y;
             if (validWidth <= 0 || validHeight <= 0)
             {
-                Console.WriteLine("警告：人脸有效区域为空，跳过！");
+                Log.Warning("人脸有效区域为空，跳过");
             }
 
             var faceRect = new SKRectI(x, y, right, bottom);

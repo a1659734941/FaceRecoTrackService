@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FaceRecoTrackService.Core.Options;
+using Serilog;
 
 namespace FaceRecoTrackService.Infrastructure.External
 {
@@ -33,7 +34,7 @@ namespace FaceRecoTrackService.Infrastructure.External
 
             if (!Directory.Exists(options.Path))
             {
-                Console.WriteLine($"监听目录不存在：{options.Path}");
+                Log.Warning("监听目录不存在：{Path}", options.Path);
                 return results;
             }
 

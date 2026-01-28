@@ -13,6 +13,7 @@ using FaceRecoTrackService.Utils;
 using FaceRecoTrackService.Utils.QdrantUtil;
 using Microsoft.AspNetCore.Hosting;
 using Qdrant.Client.Grpc;
+using Serilog;
 using SkiaSharp;
 
 namespace FaceRecoTrackService.Services
@@ -92,8 +93,10 @@ namespace FaceRecoTrackService.Services
                 throw new InvalidOperationException("人脸特征提取失败：特征向量为空");
             if (_faceOptions.VectorSize > 0 && vector.Length != _faceOptions.VectorSize)
             {
-                Console.WriteLine(
-                    $"警告：人脸特征维度不匹配，尝试自动调整：期望{_faceOptions.VectorSize}，实际{vector.Length}");
+                Log.Warning(
+                    "人脸特征维度不匹配，尝试自动调整：期望{Expected}，实际{Actual}",
+                    _faceOptions.VectorSize,
+                    vector.Length);
                 vector = FaceFeatureService.ResizeVector(vector, _faceOptions.VectorSize);
             }
 

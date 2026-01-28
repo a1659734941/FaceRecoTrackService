@@ -5,6 +5,7 @@ using Emgu.CV;
 using Emgu.CV.CvEnum;
 using SkiaSharp;
 using FaceRecoTrackService.Core.Options;
+using Serilog;
 
 namespace FaceRecoTrackService.Core
 {
@@ -50,7 +51,7 @@ namespace FaceRecoTrackService.Core
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"清晰度评估失败：{ex.Message}");
+                Log.Warning(ex, "清晰度评估失败");
                 return false;
             }
         }

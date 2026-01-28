@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using SkiaSharp;
+using Serilog;
 
 namespace FaceRecoTrackService.Core.Algorithms
 {
@@ -56,7 +57,7 @@ namespace FaceRecoTrackService.Core.Algorithms
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"保存图像失败：{ex.Message}");
+                Log.Error(ex, "保存图像失败");
             }
         }
 
@@ -77,7 +78,7 @@ namespace FaceRecoTrackService.Core.Algorithms
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"保存图像字节失败：{ex.Message}");
+                Log.Error(ex, "保存图像字节失败");
             }
         }
 

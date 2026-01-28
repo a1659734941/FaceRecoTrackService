@@ -4,11 +4,36 @@ using FaceRecoTrackService.Services;
 using FaceRecoTrackService.Utils.QdrantUtil;
 using Microsoft.Extensions.DependencyInjection;
 using Qdrant.Client.Grpc;
+using Serilog;
+using Serilog.Events;
 using System.Reflection;
 using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 Console.InputEncoding = Encoding.UTF8;
 Console.OutputEncoding = Encoding.UTF8;
+
+var logRoot = Path.Combine("logs", DateTime.Now.ToString("yyyy"), DateTime.Now.ToString("MM"));
+Directory.CreateDirectory(logRoot);
+var logPath = Path.Combine(logRoot, "FaceTrackService-.log");
+var loggerConfig = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.File(
+        logPath,
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 31,
+        shared: true);
+
+if (builder.Environment.IsDevelopment())
+{
+    loggerConfig.MinimumLevel.Debug();
+    loggerConfig.WriteTo.Console();
+}
+
+Log.Logger = loggerConfig.CreateLogger();
+builder.Host.UseSerilog();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -86,4 +111,11 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 app.MapControllers();
 
-app.Run();
+try
+{
+    app.Run();
+}
+finally
+{
+    Log.CloseAndFlush();
+}
