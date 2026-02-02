@@ -2,7 +2,7 @@
 FaceRecoTrackService/bin/
 FaceRecoTrackService/obj/
 dist/
-
+FaceRecoTrackService/res/model/
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/appsettings.Development.json
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/appsettings.json
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/concrt140.dll
