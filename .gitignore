@@ -1,3 +1,8 @@
+# 构建/发布输出目录（整目录忽略，避免大文件被提交）
+FaceRecoTrackService/bin/
+FaceRecoTrackService/obj/
+dist/
+
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/appsettings.Development.json
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/appsettings.json
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/concrt140.dll
