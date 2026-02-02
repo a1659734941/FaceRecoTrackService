@@ -18,6 +18,8 @@ namespace FaceRecoTrackService.Infrastructure.External
         public string CameraIp { get; set; } = "";
         public string CameraName { get; set; } = "";
         public string Location { get; set; } = "";
+        /// <summary>性别：1=男，0=女，-1=未解析</summary>
+        public int Gender { get; set; } = -1;
     }
 
     public class FtpFolderSnapshotClient
@@ -68,7 +70,8 @@ namespace FaceRecoTrackService.Infrastructure.External
                     FilePath = file,
                     CameraIp = fileMeta.CameraIp,
                     CameraName = fileMeta.CameraName,
-                    Location = fileMeta.Location
+                    Location = fileMeta.Location,
+                    Gender = fileMeta.Gender
                 });
 
                 _processed[file] = (lastWriteUtc, length);
@@ -110,7 +113,10 @@ namespace FaceRecoTrackService.Infrastructure.External
             return null;
         }
 
-        private static (DateTime CaptureTimeUtc, string CameraIp, string CameraName, string Location) ParseMetaFromFileName(
+        /// <summary>
+        /// 解析文件名：IP_性别(1男0女)_时间，例如 192.168.1.108_1_20260202174649490_1_1
+        /// </summary>
+        private static (DateTime CaptureTimeUtc, string CameraIp, string CameraName, string Location, int Gender) ParseMetaFromFileName(
             string filePath,
             FtpFolderOptions options)
         {
@@ -121,33 +127,38 @@ namespace FaceRecoTrackService.Infrastructure.External
             string cameraName = options.DefaultCameraName;
             string location = options.DefaultLocation;
             DateTime captureTimeUtc = File.GetCreationTimeUtc(filePath);
+            int gender = -1;
 
+            // parts[0] = IP
             if (parts.Length > 0 && parts[0].Contains('.'))
             {
                 cameraIp = parts[0];
                 cameraName = parts[0];
             }
 
-            foreach (var part in parts)
+            // parts[1] = 性别：1=男，0=女
+            if (parts.Length > 1 && (parts[1] == "0" || parts[1] == "1"))
             {
-                if (part.Length >= 14 && long.TryParse(part, out _))
+                gender = parts[1] == "1" ? 1 : 0;
+            }
+
+            // parts[2] = 时间，17位 yyyyMMddHHmmssfff 或 14位 yyyyMMddHHmmss
+            if (parts.Length > 2 && parts[2].Length >= 14 && long.TryParse(parts[2], out _))
+            {
+                var timePart = parts[2].Length >= 17 ? parts[2].Substring(0, 17) : parts[2].Substring(0, 14);
+                var format = timePart.Length == 17 ? "yyyyMMddHHmmssfff" : "yyyyMMddHHmmss";
+                if (DateTime.TryParseExact(
+                        timePart,
+                        format,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.AssumeLocal,
+                        out var localTime))
                 {
-                    var timePart = part.Length >= 17 ? part.Substring(0, 17) : part.Substring(0, 14);
-                    var format = timePart.Length == 17 ? "yyyyMMddHHmmssfff" : "yyyyMMddHHmmss";
-                    if (DateTime.TryParseExact(
-                            timePart,
-                            format,
-                            CultureInfo.InvariantCulture,
-                            DateTimeStyles.AssumeLocal,
-                            out var localTime))
-                    {
-                        captureTimeUtc = localTime.ToUniversalTime();
-                        break;
-                    }
+                    captureTimeUtc = localTime.ToUniversalTime();
                 }
             }
 
-            return (captureTimeUtc, cameraIp, cameraName, location);
+            return (captureTimeUtc, cameraIp, cameraName, location, gender);
         }
     }
 }

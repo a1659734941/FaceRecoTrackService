@@ -1,0 +1,5 @@
+2026-01-29 20:36:34.996 +08:00 [ERR] 内置Qdrant启动失败
+System.IO.FileNotFoundException: 未找到内置Qdrant可执行文件
+File name: 'D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\dist\FaceTrackService\qdrant\qdrant.exe'
+   at FaceRecoTrackService.Utils.QdrantUtil.QdrantEmbeddedBootstrapper.EnsureStartedAsync(QdrantConfig config, ILogger logger, CancellationToken cancellationToken)
+   at Program.<Main>$(String[] args)
