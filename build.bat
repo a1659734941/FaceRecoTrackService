@@ -3,125 +3,93 @@ chcp 65001 >nul
 setlocal enabledelayedexpansion
 
 echo ========================================
-echo    FaceTrackService 打包脚本
+echo    FaceTrackService Build Script
 echo ========================================
 echo.
 
-:: 设置变量
 set PROJECT_DIR=FaceRecoTrackService
 set PROJECT_FILE=%PROJECT_DIR%\FaceRecoTrackService.csproj
 set OUTPUT_DIR=dist
 set PUBLISH_DIR=%OUTPUT_DIR%\FaceTrackService
-for /f %%i in ('powershell -NoProfile -Command "(Get-Date).ToString(\"yyyyMMdd_HHmmss\")"') do set BUILD_VERSION=%%i
+for /f "delims=" %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss"') do set BUILD_VERSION=%%i
 
-:: 检查项目文件是否存在
 if not exist "%PROJECT_FILE%" (
-    echo [错误] 项目文件不存在: %PROJECT_FILE%
+    echo [ERROR] Project file not found: %PROJECT_FILE%
     pause
     exit /b 1
 )
 
-:: 清理旧的输出目录
-echo [1/6] 清理旧的输出目录...
-if exist "%OUTPUT_DIR%" (
-    rmdir /s /q "%OUTPUT_DIR%"
-)
+echo [1/7] Cleaning output...
+if exist "%OUTPUT_DIR%" rmdir /s /q "%OUTPUT_DIR%"
 mkdir "%OUTPUT_DIR%"
 mkdir "%PUBLISH_DIR%"
 
-:: 还原 NuGet 包
-echo [2/6] 还原 NuGet 包...
+echo [2/7] Restoring NuGet packages...
 dotnet restore "%PROJECT_FILE%"
 if errorlevel 1 (
-    echo [错误] NuGet 包还原失败
+    echo [ERROR] NuGet restore failed
     pause
     exit /b 1
 )
 
-:: 发布项目（单文件）
-echo [3/6] 发布项目（单文件模式）...
-dotnet publish "%PROJECT_FILE%" ^
-    --configuration Release ^
-    --runtime win-x64 ^
-    --self-contained true ^
-    --output "%PUBLISH_DIR%" ^
-    /p:PublishSingleFile=true ^
-    /p:IncludeNativeLibrariesForSelfExtract=true ^
-    /p:EnableCompressionInSingleFile=true ^
-    /p:DebugType=None ^
-    /p:DebugSymbols=false
-
+echo [3/7] Publishing (single-file)...
+dotnet publish "%PROJECT_FILE%" --configuration Release --runtime win-x64 --self-contained true --output "%PUBLISH_DIR%" /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:EnableCompressionInSingleFile=true /p:DebugType=None /p:DebugSymbols=false
 if errorlevel 1 (
-    echo [错误] 项目发布失败
+    echo [ERROR] Publish failed
     pause
     exit /b 1
 )
 
-:: 复制 res 文件夹
-echo [4/6] 复制 res 文件夹...
+echo [4/7] Copying res folder...
 if exist "%PROJECT_DIR%\res" (
     xcopy /E /I /Y "%PROJECT_DIR%\res" "%PUBLISH_DIR%\res"
-    if errorlevel 1 (
-        echo [警告] res 文件夹复制可能不完整
-    ) else (
-        echo [成功] res 文件夹已复制
-    )
+    if errorlevel 1 (echo [WARN] res copy may be incomplete) else (echo [OK] res copied)
 ) else (
-    echo [警告] res 文件夹不存在，跳过复制
+    echo [WARN] res folder not found, skipped
 )
 
-:: 校验程序图标
 if exist "%PROJECT_DIR%\res\icon\FaceTrack.ico" (
-    echo [成功] 已检测到程序图标: res\icon\FaceTrack.ico
+    echo [OK] Icon found: res\icon\FaceTrack.ico
 ) else (
-    echo [警告] 未检测到程序图标: res\icon\FaceTrack.ico
+    echo [WARN] Icon not found: res\icon\FaceTrack.ico
 )
 
-:: 复制配置文件
-echo [5/6] 复制配置文件...
-if exist "%PROJECT_DIR%\appsettings.json" (
-    copy /Y "%PROJECT_DIR%\appsettings.json" "%PUBLISH_DIR%\"
-)
-if exist "%PROJECT_DIR%\appsettings.Development.json" (
-    copy /Y "%PROJECT_DIR%\appsettings.Development.json" "%PUBLISH_DIR%\"
+echo [5/7] Copying qdrant folder (qdrant.exe)...
+if exist "%PROJECT_DIR%\qdrant" (
+    xcopy /E /I /Y "%PROJECT_DIR%\qdrant" "%PUBLISH_DIR%\qdrant"
+    if errorlevel 1 (echo [WARN] qdrant copy may be incomplete) else (echo [OK] qdrant copied)
+) else (
+    echo [WARN] qdrant folder not found, skipped - put qdrant.exe in FaceRecoTrackService\qdrant for embedded Qdrant
 )
 
-:: 复制服务脚本
-echo [6/6] 复制服务脚本...
+echo [6/7] Copying config files...
+if exist "%PROJECT_DIR%\appsettings.json" copy /Y "%PROJECT_DIR%\appsettings.json" "%PUBLISH_DIR%\"
+if exist "%PROJECT_DIR%\appsettings.Development.json" copy /Y "%PROJECT_DIR%\appsettings.Development.json" "%PUBLISH_DIR%\"
+
+echo [7/7] Copying scripts...
 if exist "scripts" (
     xcopy /E /I /Y "scripts" "%PUBLISH_DIR%\scripts"
-    if errorlevel 1 (
-        echo [警告] scripts 文件夹复制可能不完整
-    ) else (
-        echo [成功] scripts 文件夹已复制
-    )
+    if errorlevel 1 (echo [WARN] scripts copy may be incomplete) else (echo [OK] scripts copied)
 ) else (
-    echo [警告] scripts 文件夹不存在，跳过复制
+    echo [WARN] scripts folder not found, skipped
 )
 
-:: 创建发布信息文件
-echo 创建发布信息文件...
-echo 构建时间: %date% %time% > "%PUBLISH_DIR%\build_info.txt"
-echo 版本: %BUILD_VERSION% >> "%PUBLISH_DIR%\build_info.txt"
-echo 运行时: win-x64 >> "%PUBLISH_DIR%\build_info.txt"
-echo 单文件模式: 是 >> "%PUBLISH_DIR%\build_info.txt"
+echo Creating build_info.txt...
+echo Build: %date% %time% > "%PUBLISH_DIR%\build_info.txt"
+echo Version: %BUILD_VERSION% >> "%PUBLISH_DIR%\build_info.txt"
+echo Runtime: win-x64 >> "%PUBLISH_DIR%\build_info.txt"
+echo SingleFile: yes >> "%PUBLISH_DIR%\build_info.txt"
 
-:: 显示结果
 echo.
 echo ========================================
-echo    打包完成！
+echo    Build complete
 echo ========================================
 echo.
-echo 发布目录: %CD%\%PUBLISH_DIR%
-echo 主程序: FaceTrackService.exe
+echo Output: %CD%\%PUBLISH_DIR%
+echo Main: FaceTrackService.exe
 echo.
-echo 文件列表:
 dir /B "%PUBLISH_DIR%"
 echo.
-echo 提示: 
-echo   1. 确保 res 文件夹已正确复制
-echo   2. 根据实际情况修改 appsettings.json 配置
-echo   3. 运行 FaceTrackService.exe 启动服务
+echo Next: edit appsettings.json if needed, then run FaceTrackService.exe
 echo.
-
 pause

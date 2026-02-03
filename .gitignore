@@ -1,8 +1,3 @@
-# 构建/发布输出目录（整目录忽略，避免大文件被提交）
-FaceRecoTrackService/bin/
-FaceRecoTrackService/obj/
-dist/
-FaceRecoTrackService/res/model/
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/appsettings.Development.json
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/appsettings.json
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/concrt140.dll
@@ -588,3 +583,6 @@ FaceRecoTrackService/obj/Debug/net8.0/win-x64/FaceRecoTrackService.csproj.Assemb
 FaceRecoTrackService/logs/2026/01/FaceTrackService-20260128.log
 FaceRecoTrackService/logs/2026/01/FaceTrackService-20260128.log
 FaceRecoTrackService/logs/2026/01/FaceTrackService-20260128.log
+dist/
+dist/FaceTrackService/logs/2026/01/FaceTrackService-20260129.log
+dist/FaceTrackService/logs/2026/01/FaceTrackService-20260129.log
