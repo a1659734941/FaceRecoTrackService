@@ -20,23 +20,24 @@ namespace FaceRecoTrackService.API.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<ApiResponse<TrackQueryResult>> GetTrack(
+        [ProducesResponseType(typeof(ApiResponse<TrackQueryResult>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetTrack(
             [FromRoute] Guid id,
             [FromQuery] int pageNum = 1,
             [FromQuery] int pageSize = 20,
             CancellationToken cancellationToken = default)
         {
             if (pageNum <= 0 || pageSize <= 0)
-                return ApiResponse<TrackQueryResult>.Fail(ErrorCodes.BadRequest, "pageNum/pageSize必须为正整数");
+                return Ok(ApiResponse<TrackQueryResult>.Fail(400, "pageNum/pageSize必须为正整数"));
 
             try
             {
                 var result = await _trackQueryService.GetTracksAsync(id, pageNum, pageSize, cancellationToken);
-                return ApiResponse<TrackQueryResult>.Ok(result, "查询guid轨迹成功");
+                return Ok(ApiResponse<TrackQueryResult>.Ok(result, "查询guid轨迹成功"));
             }
             catch (Exception ex)
             {
-                return ApiResponse<TrackQueryResult>.Fail(ErrorCodes.InternalError, $"查询失败：{ex.Message}");
+                return Ok(ApiResponse<TrackQueryResult>.Fail(400, $"查询失败：{ex.Message}"));
             }
         }
     }

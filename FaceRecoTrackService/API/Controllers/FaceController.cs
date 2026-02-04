@@ -45,20 +45,21 @@ namespace FaceRecoTrackService.API.Controllers
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>返回注册成功的人脸唯一ID</returns>
         [HttpPost("register")]
-        public async Task<ApiResponse<FaceRegisterResponse>> Register([FromBody] FaceRegisterRequest request, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(ApiResponse<FaceRegisterResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Register([FromBody] FaceRegisterRequest request, CancellationToken cancellationToken)
         {
             try
             {
                 var result = await _registrationService.RegisterAsync(request, cancellationToken);
-                return ApiResponse<FaceRegisterResponse>.Ok(result, "注册成功");
+                return Ok(ApiResponse<FaceRegisterResponse>.Ok(result, "注册成功"));
             }
             catch (ArgumentException ex)
             {
-                return ApiResponse<FaceRegisterResponse>.Fail(ErrorCodes.BadRequest, ex.Message);
+                return Ok(ApiResponse<FaceRegisterResponse>.Fail(400, ex.Message));
             }
             catch (Exception ex)
             {
-                return ApiResponse<FaceRegisterResponse>.Fail(ErrorCodes.InternalError, $"注册失败：{ex.Message}");
+                return Ok(ApiResponse<FaceRegisterResponse>.Fail(400, $"注册失败：{ex.Message}"));
             }
         }
 
@@ -68,16 +69,17 @@ namespace FaceRecoTrackService.API.Controllers
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>返回PG库中人脸数量</returns>
         [HttpGet("count")]
-        public async Task<ApiResponse<long>> Count(CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(ApiResponse<long>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Count(CancellationToken cancellationToken)
         {
             try
             {
                 var count = await _queryService.GetCountAsync(cancellationToken);
-                return ApiResponse<long>.Ok(count, "查询成功");
+                return Ok(ApiResponse<long>.Ok(count, "查询成功"));
             }
             catch (Exception ex)
             {
-                return ApiResponse<long>.Fail(ErrorCodes.InternalError, $"查询失败：{ex.Message}");
+                return Ok(ApiResponse<long>.Fail(400, $"查询失败：{ex.Message}"));
             }
         }
 
@@ -87,16 +89,17 @@ namespace FaceRecoTrackService.API.Controllers
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>返回Qdrant集合中的向量数量</returns>
         [HttpGet("qdrant/count")]
-        public async Task<ApiResponse<long>> QdrantCount(CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(ApiResponse<long>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> QdrantCount(CancellationToken cancellationToken)
         {
             try
             {
                 var count = await _queryService.GetQdrantCountAsync(cancellationToken);
-                return ApiResponse<long>.Ok(count, "查询成功");
+                return Ok(ApiResponse<long>.Ok(count, "查询成功"));
             }
             catch (Exception ex)
             {
-                return ApiResponse<long>.Fail(ErrorCodes.InternalError, $"查询失败：{ex.Message}");
+                return Ok(ApiResponse<long>.Fail(400, $"查询失败：{ex.Message}"));
             }
         }
 
@@ -107,19 +110,20 @@ namespace FaceRecoTrackService.API.Controllers
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>返回人脸基础信息，不包含图片Base64</returns>
         [HttpGet("getfaceinfo/{id:guid}")]
-        public async Task<ApiResponse<FaceInfoResponse>> GetFaceInfo([FromRoute] Guid id, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(ApiResponse<FaceInfoResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetFaceInfo([FromRoute] Guid id, CancellationToken cancellationToken)
         {
             try
             {
                 var result = await _queryService.GetByIdAsync(id, cancellationToken);
                 if (result == null)
-                    return ApiResponse<FaceInfoResponse>.Fail(ErrorCodes.NotFound, "未找到该人脸信息");
+                    return Ok(ApiResponse<FaceInfoResponse>.Fail(400, "未找到该人脸信息"));
 
-                return ApiResponse<FaceInfoResponse>.Ok(result, "查询成功");
+                return Ok(ApiResponse<FaceInfoResponse>.Ok(result, "查询成功"));
             }
             catch (Exception ex)
             {
-                return ApiResponse<FaceInfoResponse>.Fail(ErrorCodes.InternalError, $"查询失败：{ex.Message}");
+                return Ok(ApiResponse<FaceInfoResponse>.Fail(400, $"查询失败：{ex.Message}"));
             }
         }
 
@@ -130,23 +134,24 @@ namespace FaceRecoTrackService.API.Controllers
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>返回删除结果提示</returns>
         [HttpDelete("deletefaceinfo/{id:guid}")]
-        public async Task<ApiResponse<string>> DeleteFaceInfo([FromRoute] Guid id, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> DeleteFaceInfo([FromRoute] Guid id, CancellationToken cancellationToken)
         {
             try
             {
                 var deleted = await _deletionService.DeleteAsync(id, cancellationToken);
                 if (!deleted)
-                    return ApiResponse<string>.Fail(ErrorCodes.NotFound, "未找到该人脸信息");
+                    return Ok(ApiResponse<string>.Fail(400, "未找到该人脸信息"));
 
-                return ApiResponse<string>.Ok("删除成功", "删除成功");
+                return Ok(ApiResponse<string>.Ok("删除成功", "删除成功"));
             }
             catch (ArgumentException ex)
             {
-                return ApiResponse<string>.Fail(ErrorCodes.BadRequest, ex.Message);
+                return Ok(ApiResponse<string>.Fail(400, ex.Message));
             }
             catch (Exception ex)
             {
-                return ApiResponse<string>.Fail(ErrorCodes.InternalError, $"删除失败：{ex.Message}");
+                return Ok(ApiResponse<string>.Fail(400, $"删除失败：{ex.Message}"));
             }
         }
 
@@ -154,20 +159,21 @@ namespace FaceRecoTrackService.API.Controllers
         /// 人脸对比（返回相似度与裁剪后的人脸Base64）
         /// </summary>
         [HttpPost("compare")]
-        public async Task<ApiResponse<FaceCompareResponse>> Compare([FromBody] FaceCompareRequest request, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(ApiResponse<FaceCompareResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Compare([FromBody] FaceCompareRequest request, CancellationToken cancellationToken)
         {
             try
             {
                 var result = await _verificationService.CompareAsync(request, cancellationToken);
-                return ApiResponse<FaceCompareResponse>.Ok(result, "对比完成");
+                return Ok(ApiResponse<FaceCompareResponse>.Ok(result, "对比完成"));
             }
             catch (ArgumentException ex)
             {
-                return ApiResponse<FaceCompareResponse>.Fail(ErrorCodes.BadRequest, ex.Message);
+                return Ok(ApiResponse<FaceCompareResponse>.Fail(400, ex.Message));
             }
             catch (Exception ex)
             {
-                return ApiResponse<FaceCompareResponse>.Fail(ErrorCodes.InternalError, $"对比失败：{ex.Message}");
+                return Ok(ApiResponse<FaceCompareResponse>.Fail(400, $"对比失败：{ex.Message}"));
             }
         }
 
@@ -175,20 +181,21 @@ namespace FaceRecoTrackService.API.Controllers
         /// 人脸合规检测（是否人脸、是否合规）
         /// </summary>
         [HttpPost("check")]
-        public async Task<ApiResponse<FaceCheckResponse>> Check([FromBody] FaceCheckRequest request, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(ApiResponse<FaceCheckResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Check([FromBody] FaceCheckRequest request, CancellationToken cancellationToken)
         {
             try
             {
                 var result = await _verificationService.CheckAsync(request, cancellationToken);
-                return ApiResponse<FaceCheckResponse>.Ok(result, "检测完成");
+                return Ok(ApiResponse<FaceCheckResponse>.Ok(result, "检测完成"));
             }
             catch (ArgumentException ex)
             {
-                return ApiResponse<FaceCheckResponse>.Fail(ErrorCodes.BadRequest, ex.Message);
+                return Ok(ApiResponse<FaceCheckResponse>.Fail(400, ex.Message));
             }
             catch (Exception ex)
             {
-                return ApiResponse<FaceCheckResponse>.Fail(ErrorCodes.InternalError, $"检测失败：{ex.Message}");
+                return Ok(ApiResponse<FaceCheckResponse>.Fail(400, $"检测失败：{ex.Message}"));
             }
         }
     }
