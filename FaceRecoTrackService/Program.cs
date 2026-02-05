@@ -78,6 +78,8 @@ builder.Services.AddSingleton(new PgSchemaInitializer(pgConnectionString));
 builder.Services.AddSingleton(new PgFaceRepository(pgConnectionString));
 builder.Services.AddSingleton(new PgTrackRepository(pgConnectionString));
 builder.Services.AddSingleton(new PgCameraMappingRepository(pgConnectionString));
+builder.Services.AddSingleton(new PgFaceCameraRepository(pgConnectionString));
+builder.Services.AddSingleton(new PgRecordCameraRepository(pgConnectionString));
 
 builder.Services.AddSingleton<QdrantVectorManager>(sp =>
 {
@@ -107,6 +109,7 @@ builder.Services.AddScoped<FaceQueryService>();
 builder.Services.AddScoped<FaceVerificationService>();
 builder.Services.AddScoped<TrackQueryService>();
 builder.Services.AddScoped<TrackRecordService>();
+builder.Services.AddScoped<CameraService>();
 
 builder.Services.AddHostedService<FtpRecognitionWorker>();
 
