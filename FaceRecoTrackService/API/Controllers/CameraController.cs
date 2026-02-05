@@ -23,7 +23,7 @@ namespace FaceRecoTrackService.API.Controllers
         }
 
         /// <summary>新增人脸摄像头</summary>
-        [HttpPost("face")]
+        [HttpPost("addFace")]
         [ProducesResponseType(typeof(ApiResponse<FaceCameraResponse>), 200)]
         public async Task<IActionResult> AddFaceCamera([FromBody] AddFaceCameraRequest request, CancellationToken cancellationToken)
         {
@@ -39,7 +39,7 @@ namespace FaceRecoTrackService.API.Controllers
         }
 
         /// <summary>新增录像摄像头</summary>
-        [HttpPost("record")]
+        [HttpPost("addRecord")]
         [ProducesResponseType(typeof(ApiResponse<RecordCameraResponse>), 200)]
         public async Task<IActionResult> AddRecordCamera([FromBody] AddRecordCameraRequest request, CancellationToken cancellationToken)
         {
@@ -55,7 +55,7 @@ namespace FaceRecoTrackService.API.Controllers
         }
 
         /// <summary>查询人脸摄像头（返回所有人脸摄像头的 id、ip、介绍）</summary>
-        [HttpGet("face")]
+        [HttpGet("queryFace")]
         [ProducesResponseType(typeof(ApiResponse<List<FaceCameraResponse>>), 200)]
         public async Task<IActionResult> ListFaceCameras(CancellationToken cancellationToken)
         {
@@ -64,7 +64,7 @@ namespace FaceRecoTrackService.API.Controllers
         }
 
         /// <summary>查询录像摄像头（返回所有录像摄像头的 id、ip、名称）</summary>
-        [HttpGet("record")]
+        [HttpGet("queryRecord")]
         [ProducesResponseType(typeof(ApiResponse<List<RecordCameraResponse>>), 200)]
         public async Task<IActionResult> ListRecordCameras(CancellationToken cancellationToken)
         {
@@ -73,7 +73,7 @@ namespace FaceRecoTrackService.API.Controllers
         }
 
         /// <summary>绑定人脸与录像摄像头（用 id，不可重复绑定同一人脸或同一录像）</summary>
-        [HttpPost("bind")]
+        [HttpPost("addBind")]
         [ProducesResponseType(typeof(ApiResponse<long>), 200)]
         public async Task<IActionResult> BindCameras([FromBody] BindCamerasRequest request, CancellationToken cancellationToken)
         {
@@ -93,7 +93,7 @@ namespace FaceRecoTrackService.API.Controllers
         }
 
         /// <summary>查询已绑定的摄像头（返回两个摄像头 IP 及录像位置名称）</summary>
-        [HttpGet("bindings")]
+        [HttpGet("queryBindings")]
         [ProducesResponseType(typeof(ApiResponse<List<BoundCameraItem>>), 200)]
         public async Task<IActionResult> ListBindings(CancellationToken cancellationToken)
         {
@@ -101,8 +101,8 @@ namespace FaceRecoTrackService.API.Controllers
             return Ok(ApiResponse<List<BoundCameraItem>>.Ok(list, "查询成功"));
         }
 
-        /// <summary> 修改已绑定：换绑（传 newRecordCameraId）或解绑（unbind=true）</summary>
-        [HttpPut("binding/{mappingId:long}")]
+        /// <summary>修改已绑定：换绑（传 newRecordCameraId）或解绑（unbind=true）</summary>
+        [HttpPut("changeBinding/{mappingId:long}")]
         [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
         public async Task<IActionResult> UpdateBinding(long mappingId, [FromBody] UpdateBindingRequest request, CancellationToken cancellationToken)
         {
@@ -122,7 +122,7 @@ namespace FaceRecoTrackService.API.Controllers
         }
 
         /// <summary>强行绑定：若该人脸或录像已绑定则先解除再绑</summary>
-        [HttpPost("bind/force")]
+        [HttpPost("addBindForce")]
         [ProducesResponseType(typeof(ApiResponse<long>), 200)]
         public async Task<IActionResult> ForceBindCameras([FromBody] ForceBindCamerasRequest request, CancellationToken cancellationToken)
         {
@@ -138,7 +138,7 @@ namespace FaceRecoTrackService.API.Controllers
         }
 
         /// <summary>删除人脸摄像头（query: id 或 ip 二选一）</summary>
-        [HttpDelete("face")]
+        [HttpDelete("deleteFace")]
         [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
         public async Task<IActionResult> DeleteFaceCamera([FromQuery] long? id, [FromQuery] string? ip, CancellationToken cancellationToken)
         {
@@ -154,7 +154,7 @@ namespace FaceRecoTrackService.API.Controllers
         }
 
         /// <summary>删除录像摄像头（query: id 或 ip 二选一）</summary>
-        [HttpDelete("record")]
+        [HttpDelete("deleteRecord")]
         [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
         public async Task<IActionResult> DeleteRecordCamera([FromQuery] long? id, [FromQuery] string? ip, CancellationToken cancellationToken)
         {
@@ -170,7 +170,7 @@ namespace FaceRecoTrackService.API.Controllers
         }
 
         /// <summary>修改人脸摄像头（query: id 或 ip 二选一）</summary>
-        [HttpPut("face")]
+        [HttpPut("changeFace")]
         [ProducesResponseType(typeof(ApiResponse<FaceCameraResponse>), 200)]
         public async Task<IActionResult> UpdateFaceCamera([FromQuery] long? id, [FromQuery] string? ip, [FromBody] UpdateFaceCameraRequest request, CancellationToken cancellationToken)
         {
@@ -188,7 +188,7 @@ namespace FaceRecoTrackService.API.Controllers
         }
 
         /// <summary>修改录像摄像头（query: id 或 ip 二选一）</summary>
-        [HttpPut("record")]
+        [HttpPut("changeRecord")]
         [ProducesResponseType(typeof(ApiResponse<RecordCameraResponse>), 200)]
         public async Task<IActionResult> UpdateRecordCamera([FromQuery] long? id, [FromQuery] string? ip, [FromBody] UpdateRecordCameraRequest request, CancellationToken cancellationToken)
         {
