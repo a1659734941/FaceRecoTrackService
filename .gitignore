@@ -586,3 +586,10 @@ FaceRecoTrackService/logs/2026/01/FaceTrackService-20260128.log
 dist/
 dist/FaceTrackService/logs/2026/01/FaceTrackService-20260129.log
 dist/FaceTrackService/logs/2026/01/FaceTrackService-20260129.log
+FaceRecoTrackService/obj/Debug/net8.0/win-x64/FaceRecoTrackService.sourcelink.json
+FaceRecoTrackService/logs/2026/02/FaceTrackService-20260205.log
+FaceRecoTrackService/bin/Debug/net8.0/win-x64/scripts/face-cameras-to-add.json
+FaceRecoTrackService/bin/Release/net8.0/win-x64/scripts/face-cameras-to-add.json
+FaceRecoTrackService/bin/Release/net8.0/win-x64/scripts/record-cameras-to-add.json
+FaceRecoTrackService/logs/2026/02/FaceTrackService-20260205.log
+FaceRecoTrackService/obj/Debug/net8.0/win-x64/FaceRecoTrackService.sourcelink.json
