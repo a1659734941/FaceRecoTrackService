@@ -627,6 +627,18 @@ FaceRecoTrackService/bin/Debug/net8.0/win-x64/qdrant/storage/collections/face_co
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/qdrant/storage/collections/face_collection/0/segments/0c544d67-db5c-4acf-8662-21524ba464c0/vector_storage/vectors/status.dat
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/qdrant/storage/collections/face_collection/0/segments/1d16025f-3ef5-466c-b67d-74c289f09e79/segment.json
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/qdrant/storage/collections/face_collection/0/segments/1d16025f-3ef5-466c-b67d-74c289f09e79/version.info
+
+# Model files
+FaceRecoTrackService/res/model/*.onnx
+FaceRecoTrackService/res/model/*.pth
+FaceRecoTrackService/res/model/*.pt
+FaceRecoTrackService/res/model/*.weights
+
+# Bin directory model files
+FaceRecoTrackService/bin/**/res/model/*.onnx
+FaceRecoTrackService/bin/**/res/model/*.pth
+FaceRecoTrackService/bin/**/res/model/*.pt
+FaceRecoTrackService/bin/**/res/model/*.weights
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/qdrant/storage/collections/face_collection/0/segments/1d16025f-3ef5-466c-b67d-74c289f09e79/payload_index/config.json
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/qdrant/storage/collections/face_collection/0/segments/1d16025f-3ef5-466c-b67d-74c289f09e79/payload_storage/bitmask.dat
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/qdrant/storage/collections/face_collection/0/segments/1d16025f-3ef5-466c-b67d-74c289f09e79/payload_storage/config.json
