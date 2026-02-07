@@ -26,10 +26,10 @@ if not exist "%SERVICE_EXE%" (
 sc query "%SERVICE_NAME%" >nul 2>&1
 if %errorlevel%==0 (
     echo [提示] 服务已存在: %SERVICE_NAME%
-    echo 正在删除现有服务...
-    sc delete "%SERVICE_NAME%"
-    timeout /t 2 /nobreak >nul
-    echo 服务已删除，正在重新注册...
+    echo 如需重新注册，请先删除服务:
+    echo   sc delete "%SERVICE_NAME%"
+    pause
+    exit /b 0
 )
 
 echo [进行中] 正在注册服务...

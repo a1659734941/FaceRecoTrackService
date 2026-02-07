@@ -84,3 +84,131 @@ Microsoft.ML.OnnxRuntime.OnnxRuntimeException: [ErrorCode:NoSuchFile] Load model
 2026-02-08 00:39:21.223 +08:00 [INF] 模型预加载完成
 2026-02-08 00:39:21.237 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
 2026-02-08 00:39:21.787 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-08 00:42:56.202 +08:00 [WRN] Failed to determine the https port for redirect.
+2026-02-08 00:49:52.971 +08:00 [INF] === 硬件配置信息 ===
+2026-02-08 00:49:52.995 +08:00 [INF] CPU核心数: 12
+2026-02-08 00:49:52.996 +08:00 [INF] 进程ID: 35284
+2026-02-08 00:49:53.008 +08:00 [INF] 进程内存使用: 47 MB
+2026-02-08 00:49:53.009 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-08 00:49:53.096 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-08 00:49:53.097 +08:00 [INF] ==================
+2026-02-08 00:49:53.098 +08:00 [INF] 开始预加载模型...
+2026-02-08 00:49:53.307 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-08 00:49:54.058 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-08 00:49:54.059 +08:00 [INF] 模型预加载完成
+2026-02-08 00:49:54.072 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:49:54.572 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-08 00:51:48.161 +08:00 [INF] === 硬件配置信息 ===
+2026-02-08 00:51:48.186 +08:00 [INF] CPU核心数: 12
+2026-02-08 00:51:48.187 +08:00 [INF] 进程ID: 9864
+2026-02-08 00:51:48.197 +08:00 [INF] 进程内存使用: 47 MB
+2026-02-08 00:51:48.198 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-08 00:51:48.261 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-08 00:51:48.262 +08:00 [INF] ==================
+2026-02-08 00:51:48.263 +08:00 [INF] 开始预加载模型...
+2026-02-08 00:51:48.463 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-08 00:51:48.950 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-08 00:51:48.954 +08:00 [INF] 模型预加载完成
+2026-02-08 00:51:48.974 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:51:49.665 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-08 00:54:54.209 +08:00 [INF] === 硬件配置信息 ===
+2026-02-08 00:54:54.241 +08:00 [INF] CPU核心数: 12
+2026-02-08 00:54:54.242 +08:00 [INF] 进程ID: 21924
+2026-02-08 00:54:54.257 +08:00 [INF] 进程内存使用: 47 MB
+2026-02-08 00:54:54.258 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-08 00:54:54.358 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-08 00:54:54.359 +08:00 [INF] ==================
+2026-02-08 00:54:54.362 +08:00 [INF] 开始预加载模型...
+2026-02-08 00:54:54.705 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-08 00:54:55.594 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-08 00:54:55.594 +08:00 [INF] 模型预加载完成
+2026-02-08 00:54:55.620 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:54:56.545 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-08 00:54:56.622 +08:00 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://0.0.0.0:12355: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: 通常每个套接字地址(协议/网络地址/端口)只允许使用一次。
+ ---> System.Net.Sockets.SocketException (10048): 通常每个套接字地址(协议/网络地址/端口)只允许使用一次。
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.ListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindAsync(ListenOptions[] listenOptions, AddressBindContext context, Func`2 useHttps, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__15_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2026-02-08 00:54:56.649 +08:00 [ERR] BackgroundService failed
+System.OperationCanceledException: The operation was canceled.
+   at System.Threading.Channels.AsyncOperation`1.GetResult(Int16 token)
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.WorkerLoopAsync(ChannelReader`1 reader, CancellationToken cancellationToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 108
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.ExecuteAsync(CancellationToken stoppingToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 97
+   at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)
+2026-02-08 00:55:12.422 +08:00 [INF] === 硬件配置信息 ===
+2026-02-08 00:55:12.456 +08:00 [INF] CPU核心数: 12
+2026-02-08 00:55:12.457 +08:00 [INF] 进程ID: 5276
+2026-02-08 00:55:12.470 +08:00 [INF] 进程内存使用: 48 MB
+2026-02-08 00:55:12.471 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-08 00:55:12.571 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-08 00:55:12.572 +08:00 [INF] ==================
+2026-02-08 00:55:12.575 +08:00 [INF] 开始预加载模型...
+2026-02-08 00:55:12.789 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-08 00:55:13.238 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-08 00:55:13.239 +08:00 [INF] 模型预加载完成
+2026-02-08 00:55:13.255 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:55:13.872 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-08 00:55:15.898 +08:00 [WRN] Failed to determine the https port for redirect.
+2026-02-08 01:03:18.049 +08:00 [INF] === 硬件配置信息 ===
+2026-02-08 01:03:18.077 +08:00 [INF] CPU核心数: 12
+2026-02-08 01:03:18.078 +08:00 [INF] 进程ID: 33992
+2026-02-08 01:03:18.086 +08:00 [INF] 进程内存使用: 47 MB
+2026-02-08 01:03:18.087 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-08 01:03:18.151 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-08 01:03:18.151 +08:00 [INF] ==================
+2026-02-08 01:03:18.153 +08:00 [INF] 开始预加载模型...
+2026-02-08 01:03:18.363 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-08 01:03:18.969 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-08 01:03:18.982 +08:00 [INF] 模型预加载完成
+2026-02-08 01:03:19.001 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 01:03:19.694 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-08 01:03:19.931 +08:00 [WRN] Failed to determine the https port for redirect.
+2026-02-08 01:08:07.650 +08:00 [INF] === 硬件配置信息 ===
+2026-02-08 01:08:07.681 +08:00 [INF] CPU核心数: 12
+2026-02-08 01:08:07.682 +08:00 [INF] 进程ID: 27140
+2026-02-08 01:08:07.691 +08:00 [INF] 进程内存使用: 47 MB
+2026-02-08 01:08:07.692 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-08 01:08:07.763 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-08 01:08:07.763 +08:00 [INF] ==================
+2026-02-08 01:08:07.765 +08:00 [INF] 开始预加载模型...
+2026-02-08 01:08:07.977 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-08 01:08:08.432 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-08 01:08:08.450 +08:00 [INF] 模型预加载完成
+2026-02-08 01:08:08.468 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 01:08:09.796 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-08 01:08:19.274 +08:00 [WRN] Failed to determine the https port for redirect.
+2026-02-08 01:12:18.012 +08:00 [INF] === 硬件配置信息 ===
+2026-02-08 01:12:18.047 +08:00 [INF] CPU核心数: 12
+2026-02-08 01:12:18.048 +08:00 [INF] 进程ID: 36676
+2026-02-08 01:12:18.058 +08:00 [INF] 进程内存使用: 47 MB
+2026-02-08 01:12:18.059 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-08 01:12:18.158 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-08 01:12:18.159 +08:00 [INF] ==================
+2026-02-08 01:12:18.162 +08:00 [INF] 开始预加载模型...
+2026-02-08 01:12:18.391 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-08 01:12:18.996 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-08 01:12:19.000 +08:00 [INF] 模型预加载完成
+2026-02-08 01:12:19.014 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 01:12:19.529 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-08 01:12:21.622 +08:00 [WRN] Failed to determine the https port for redirect.

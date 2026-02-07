@@ -11,9 +11,24 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using System.IO;
+
+// 设置当前工作目录为可执行文件所在的目录
+var exeDir = AppContext.BaseDirectory;
+Directory.SetCurrentDirectory(exeDir);
+
 var builder = WebApplication.CreateBuilder(args);
-Console.InputEncoding = Encoding.UTF8;
-Console.OutputEncoding = Encoding.UTF8;
+// 配置为Windows服务
+builder.Host.UseWindowsService(options =>
+{
+    options.ServiceName = "FaceTrackService";
+});
+
+// 仅在非服务模式下设置控制台编码
+if (Environment.UserInteractive)
+{
+    Console.InputEncoding = Encoding.UTF8;
+    Console.OutputEncoding = Encoding.UTF8;
+}
 
 var logRoot = Path.Combine("logs", DateTime.Now.ToString("yyyy"), DateTime.Now.ToString("MM"));
 Directory.CreateDirectory(logRoot);
@@ -32,6 +47,11 @@ var loggerConfig = new LoggerConfiguration()
 if (builder.Environment.IsDevelopment())
 {
     loggerConfig.MinimumLevel.Debug();
+    loggerConfig.WriteTo.Console();
+}
+else if (Environment.UserInteractive)
+{
+    // 在非开发模式但交互模式下也输出到控制台
     loggerConfig.WriteTo.Console();
 }
 
