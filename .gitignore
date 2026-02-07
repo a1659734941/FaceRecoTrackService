@@ -708,3 +708,9 @@ FaceRecoTrackService/logs/2026/02/FaceTrackService-20260207.log
 FaceRecoTrackService/logs/2026/02/FaceTrackService-20260205.log
 FaceRecoTrackService/obj/Debug/net8.0/win-x64/FaceRecoTrackService.sourcelink.json
 FaceRecoTrackService/obj/Debug/net8.0/win-x64/project.razor.json
+FaceRecoTrackService/bin/Debug/net8.0/win-x64/res/model/ArcFace.optimized.onnx
+FaceRecoTrackService/logs/2026/02/FaceTrackService-20260208.log
+FaceRecoTrackService/res/model/ArcFace.optimized.onnx
+FaceRecoTrackService/bin/Debug/net8.0/win-x64/res/model/ArcFace.optimized.onnx
+FaceRecoTrackService/bin/Release/net8.0/win-x64/res/model/ArcFace.optimized.onnx
+FaceRecoTrackService/bin/Debug/net8.0/win-x64/res/model/ArcFace.optimized.onnx

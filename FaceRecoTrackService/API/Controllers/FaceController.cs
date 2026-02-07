@@ -267,8 +267,18 @@ namespace FaceRecoTrackService.API.Controllers
             {
                 // 调用验证服务进行电脑人脸识别
                 var result = await _verificationService.ComputerRecognizeAsync(request, cancellationToken);
-                // 返回识别结果
-                return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Ok(result, "识别完成"));
+                
+                // 检查是否识别成功
+                if (result.Recognized)
+                {
+                    // 识别成功，返回 200
+                    return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Ok(result, "识别完成"));
+                }
+                else
+                {
+                    // 识别失败，返回 400
+                    return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Fail(400, result.Message));
+                }
             }
             catch (ArgumentException ex)
             {

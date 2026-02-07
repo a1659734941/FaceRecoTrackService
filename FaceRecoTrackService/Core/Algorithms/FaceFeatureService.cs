@@ -36,6 +36,9 @@ namespace FaceRecoTrackService.Core.Algorithms
 
             var sessionOptions = new Microsoft.ML.OnnxRuntime.SessionOptions();
             
+            // Set graph optimization level to avoid hardware-specific optimizations
+            sessionOptions.GraphOptimizationLevel = Microsoft.ML.OnnxRuntime.GraphOptimizationLevel.ORT_ENABLE_EXTENDED;
+            
             // Set thread counts for better performance
             int intraOpThreads = options.OnnxIntraOpNumThreads > 0 ? options.OnnxIntraOpNumThreads : Environment.ProcessorCount;
             int interOpThreads = options.OnnxInterOpNumThreads > 0 ? options.OnnxInterOpNumThreads : Math.Max(1, Environment.ProcessorCount / 2);

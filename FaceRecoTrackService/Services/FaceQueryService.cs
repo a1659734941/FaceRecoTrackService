@@ -39,7 +39,7 @@ namespace FaceRecoTrackService.Services
                 UserName = entity.UserName,
                 Ip = entity.Ip,
                 Description = entity.Description,
-                ImageBase64 = null,
+                ImageBase64 = entity.ImageBase64,
                 CreatedAtUtc = entity.CreatedAtUtc
             };
         }
@@ -65,7 +65,7 @@ namespace FaceRecoTrackService.Services
                 UserName = entity.UserName,
                 Ip = entity.Ip,
                 Description = entity.Description,
-                ImageBase64 = null,
+                ImageBase64 = entity.ImageBase64,
                 CreatedAtUtc = entity.CreatedAtUtc
             }).ToList();
         }
