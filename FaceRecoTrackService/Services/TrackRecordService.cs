@@ -30,10 +30,21 @@ namespace FaceRecoTrackService.Services
             string? fallbackLocation,
             CancellationToken cancellationToken)
         {
-            var latest = await _trackRepository.GetLatestTrackAsync(personId, cancellationToken);
-            if (latest != null && string.Equals(latest.SnapCameraIp, snapCameraIp, StringComparison.OrdinalIgnoreCase))
+            var mapping = await _cameraMappingRepository.GetMappingAsync(snapCameraIp, cancellationToken);
+            var recordCameraIp = mapping?.RecordCameraIp ?? snapCameraIp;
+            var currentLocation = mapping?.RoomName ?? "";
+            if (string.IsNullOrWhiteSpace(currentLocation))
             {
-                // 同一房间（摄像头）只保留首次抓拍
+                if (_roomConfig.RoomMapping.TryGetValue(snapCameraIp, out var mappedRoom))
+                    currentLocation = mappedRoom;
+                else
+                    currentLocation = fallbackLocation ?? "";
+            }
+
+            var latest = await _trackRepository.GetLatestTrackAsync(personId, cancellationToken);
+            if (latest != null && string.Equals(latest.SnapLocation, currentLocation, StringComparison.OrdinalIgnoreCase))
+            {
+                // 同一位置只保留首次抓拍
                 return;
             }
 
@@ -42,22 +53,11 @@ namespace FaceRecoTrackService.Services
                 await _trackRepository.UpdateTrackEndTimeAsync(latest.Id, snapTimeUtc, cancellationToken);
             }
 
-            var mapping = await _cameraMappingRepository.GetMappingAsync(snapCameraIp, cancellationToken);
-            var recordCameraIp = mapping?.RecordCameraIp ?? snapCameraIp;
-            var location = mapping?.RoomName ?? "";
-            if (string.IsNullOrWhiteSpace(location))
-            {
-                if (_roomConfig.RoomMapping.TryGetValue(snapCameraIp, out var mappedRoom))
-                    location = mappedRoom;
-                else
-                    location = fallbackLocation ?? "";
-            }
-
             var record = new TrackRecord
             {
                 PersonId = personId,
                 SnapTimeUtc = snapTimeUtc,
-                SnapLocation = location,
+                SnapLocation = currentLocation,
                 SnapCameraIp = snapCameraIp,
                 RecordCameraIp = recordCameraIp,
                 RecordStartTimeUtc = snapTimeUtc,

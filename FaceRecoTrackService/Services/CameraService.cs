@@ -60,7 +60,7 @@ namespace FaceRecoTrackService.Services
             return result;
         }
 
-        /// <summary>绑定人脸与录像摄像头（用 id），不允许重复绑定同一人脸或同一录像。</summary>
+        /// <summary>绑定人脸与录像摄像头（用 id），允许一个人脸摄像头绑定多个录像摄像头，但一个录像摄像头只能绑定一个人脸摄像头。</summary>
         public async Task<long> BindCamerasAsync(BindCamerasRequest request, CancellationToken cancellationToken)
         {
             var face = await _faceRepo.GetByIdAsync(request.FaceCameraId, cancellationToken);
@@ -70,17 +70,10 @@ namespace FaceRecoTrackService.Services
             if (record == null)
                 throw new ArgumentException("录像摄像头不存在");
 
-            var existingFace = await _mappingRepo.GetBindingByFaceCameraIdAsync(request.FaceCameraId, cancellationToken);
-            if (existingFace != null)
-                throw new InvalidOperationException("该人脸摄像头已绑定，无法重复绑定");
-            var existingRecord = await _mappingRepo.GetBindingByRecordCameraIdAsync(request.RecordCameraId, cancellationToken);
-            if (existingRecord != null)
-                throw new InvalidOperationException("该录像摄像头已绑定，无法重复绑定");
+            
 
             var id = await _mappingRepo.BindAsync(request.FaceCameraId, request.RecordCameraId, cancellationToken);
-            if (id == null)
-                throw new InvalidOperationException("绑定失败");
-            return id.Value;
+            return id;
         }
 
         public async Task<List<BoundCameraItem>> ListBindingsAsync(CancellationToken cancellationToken)
@@ -117,16 +110,13 @@ namespace FaceRecoTrackService.Services
                 var record = await _recordRepo.GetByIdAsync(request.NewRecordCameraId.Value, cancellationToken);
                 if (record == null)
                     throw new ArgumentException("目标录像摄像头不存在");
-                var existingRecord = await _mappingRepo.GetBindingByRecordCameraIdAsync(request.NewRecordCameraId.Value, cancellationToken);
-                if (existingRecord != null && existingRecord.Id != mappingId)
-                    throw new InvalidOperationException("该录像摄像头已被其他绑定使用");
                 return await _mappingRepo.UpdateRecordCameraIdAsync(mappingId, request.NewRecordCameraId.Value, cancellationToken);
             }
 
             return false;
         }
 
-        /// <summary>强行绑定：若该人脸或录像已绑定则先解除再绑。</summary>
+        /// <summary>强行绑定：若该录像已绑定则先解除再绑，保留人脸摄像头的其他绑定关系。</summary>
         public async Task<long> ForceBindCamerasAsync(ForceBindCamerasRequest request, CancellationToken cancellationToken)
         {
             var face = await _faceRepo.GetByIdAsync(request.FaceCameraId, cancellationToken);
@@ -136,15 +126,10 @@ namespace FaceRecoTrackService.Services
             if (record == null)
                 throw new ArgumentException("录像摄像头不存在");
 
-            await _mappingRepo.UnbindByFaceCameraIdAsync(request.FaceCameraId, cancellationToken);
-            var existingRecord = await _mappingRepo.GetBindingByRecordCameraIdAsync(request.RecordCameraId, cancellationToken);
-            if (existingRecord != null)
-                await _mappingRepo.UnbindByMappingIdAsync(existingRecord.Id, cancellationToken);
+            
 
             var id = await _mappingRepo.BindAsync(request.FaceCameraId, request.RecordCameraId, cancellationToken);
-            if (id == null)
-                throw new InvalidOperationException("绑定失败");
-            return id.Value;
+            return id;
         }
 
         public async Task<bool> DeleteFaceCameraAsync(long? id, string? ip, CancellationToken cancellationToken)

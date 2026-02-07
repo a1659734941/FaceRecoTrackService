@@ -95,8 +95,7 @@ LIMIT 1;";
 CREATE TABLE IF NOT EXISTS camera_mapping (
     id bigserial PRIMARY KEY,
     face_camera_id bigint NOT NULL REFERENCES face_cameras(id) ON DELETE CASCADE,
-    record_camera_id bigint NOT NULL REFERENCES record_cameras(id) ON DELETE CASCADE,
-    UNIQUE(face_camera_id)
+    record_camera_id bigint NOT NULL REFERENCES record_cameras(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_camera_mapping_face ON camera_mapping(face_camera_id);
 CREATE INDEX IF NOT EXISTS idx_camera_mapping_record ON camera_mapping(record_camera_id);";
@@ -114,14 +113,12 @@ INSERT INTO record_cameras (camera_ip, location_name) SELECT DISTINCT record_cam
 CREATE TABLE IF NOT EXISTS camera_mapping_new (
     id bigserial PRIMARY KEY,
     face_camera_id bigint NOT NULL REFERENCES face_cameras(id) ON DELETE CASCADE,
-    record_camera_id bigint NOT NULL REFERENCES record_cameras(id) ON DELETE CASCADE,
-    UNIQUE(face_camera_id)
+    record_camera_id bigint NOT NULL REFERENCES record_cameras(id) ON DELETE CASCADE
 );
 INSERT INTO camera_mapping_new (face_camera_id, record_camera_id)
 SELECT fc.id, rc.id FROM camera_mapping old
 JOIN face_cameras fc ON fc.camera_ip = old.snap_camera_ip
-JOIN record_cameras rc ON rc.camera_ip = old.record_camera_ip
-ON CONFLICT (face_camera_id) DO NOTHING;
+JOIN record_cameras rc ON rc.camera_ip = old.record_camera_ip;
 DROP TABLE camera_mapping;
 ALTER TABLE camera_mapping_new RENAME TO camera_mapping;
 CREATE INDEX IF NOT EXISTS idx_camera_mapping_face ON camera_mapping(face_camera_id);

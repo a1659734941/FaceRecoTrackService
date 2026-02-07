@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FaceRecoTrackService.Core.Models;
@@ -66,13 +68,12 @@ ORDER BY m.id;";
             return list;
         }
 
-        /// <summary>新增绑定，返回映射 id。若 face 或 record 已被绑定则返回 null（由调用方报错）。</summary>
-        public async Task<long?> BindAsync(long faceCameraId, long recordCameraId, CancellationToken cancellationToken)
+        /// <summary>新增绑定，返回映射 id。</summary>
+        public async Task<long> BindAsync(long faceCameraId, long recordCameraId, CancellationToken cancellationToken)
         {
             const string sql = @"
 INSERT INTO camera_mapping (face_camera_id, record_camera_id)
 VALUES (@face_camera_id, @record_camera_id)
-ON CONFLICT (face_camera_id) DO NOTHING
 RETURNING id;";
             await using var conn = new NpgsqlConnection(_connectionString);
             await conn.OpenAsync(cancellationToken);
@@ -80,11 +81,12 @@ RETURNING id;";
             cmd.Parameters.AddWithValue("face_camera_id", faceCameraId);
             cmd.Parameters.AddWithValue("record_camera_id", recordCameraId);
             var id = await cmd.ExecuteScalarAsync(cancellationToken);
-            if (id == null || id == DBNull.Value) return null;
+            if (id == null || id == DBNull.Value)
+                throw new InvalidOperationException("绑定失败");
             return Convert.ToInt64(id);
         }
 
-        public async Task<CameraBinding?> GetBindingByFaceCameraIdAsync(long faceCameraId, CancellationToken cancellationToken)
+        public async Task<List<CameraBinding>> GetBindingsByFaceCameraIdAsync(long faceCameraId, CancellationToken cancellationToken)
         {
             const string sql = "SELECT id, face_camera_id, record_camera_id FROM camera_mapping WHERE face_camera_id = @face_camera_id;";
             await using var conn = new NpgsqlConnection(_connectionString);
@@ -92,16 +94,26 @@ RETURNING id;";
             await using var cmd = new NpgsqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("face_camera_id", faceCameraId);
             await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
-            if (!await reader.ReadAsync(cancellationToken)) return null;
-            return new CameraBinding
+            var bindings = new List<CameraBinding>();
+            while (await reader.ReadAsync(cancellationToken))
             {
-                Id = reader.GetInt64(0),
-                FaceCameraId = reader.GetInt64(1),
-                RecordCameraId = reader.GetInt64(2)
-            };
+                bindings.Add(new CameraBinding
+                {
+                    Id = reader.GetInt64(0),
+                    FaceCameraId = reader.GetInt64(1),
+                    RecordCameraId = reader.GetInt64(2)
+                });
+            }
+            return bindings;
         }
 
-        public async Task<CameraBinding?> GetBindingByRecordCameraIdAsync(long recordCameraId, CancellationToken cancellationToken)
+        public async Task<CameraBinding?> GetBindingByFaceCameraIdAsync(long faceCameraId, CancellationToken cancellationToken)
+        {
+            var bindings = await GetBindingsByFaceCameraIdAsync(faceCameraId, cancellationToken);
+            return bindings.FirstOrDefault();
+        }
+
+        public async Task<List<CameraBinding>> GetBindingsByRecordCameraIdAsync(long recordCameraId, CancellationToken cancellationToken)
         {
             const string sql = "SELECT id, face_camera_id, record_camera_id FROM camera_mapping WHERE record_camera_id = @record_camera_id;";
             await using var conn = new NpgsqlConnection(_connectionString);
@@ -109,13 +121,23 @@ RETURNING id;";
             await using var cmd = new NpgsqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("record_camera_id", recordCameraId);
             await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
-            if (!await reader.ReadAsync(cancellationToken)) return null;
-            return new CameraBinding
+            var bindings = new List<CameraBinding>();
+            while (await reader.ReadAsync(cancellationToken))
             {
-                Id = reader.GetInt64(0),
-                FaceCameraId = reader.GetInt64(1),
-                RecordCameraId = reader.GetInt64(2)
-            };
+                bindings.Add(new CameraBinding
+                {
+                    Id = reader.GetInt64(0),
+                    FaceCameraId = reader.GetInt64(1),
+                    RecordCameraId = reader.GetInt64(2)
+                });
+            }
+            return bindings;
+        }
+
+        public async Task<CameraBinding?> GetBindingByRecordCameraIdAsync(long recordCameraId, CancellationToken cancellationToken)
+        {
+            var bindings = await GetBindingsByRecordCameraIdAsync(recordCameraId, cancellationToken);
+            return bindings.FirstOrDefault();
         }
 
         public async Task<CameraBinding?> GetBindingByMappingIdAsync(long mappingId, CancellationToken cancellationToken)

@@ -72,7 +72,7 @@ namespace FaceRecoTrackService.API.Controllers
             return Ok(ApiResponse<List<RecordCameraResponse>>.Ok(list, "查询成功"));
         }
 
-        /// <summary>绑定人脸与录像摄像头（用 id，不可重复绑定同一人脸或同一录像）</summary>
+        /// <summary>绑定人脸与录像摄像头（用 id，一个人脸摄像头可以绑定多个录像摄像头）</summary>
         [HttpPost("addBind")]
         [ProducesResponseType(typeof(ApiResponse<long>), 200)]
         public async Task<IActionResult> BindCameras([FromBody] BindCamerasRequest request, CancellationToken cancellationToken)
