@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 using FaceRecoTrackService.Core.Algorithms;
 using FaceRecoTrackService.Core.Dtos;
 using FaceRecoTrackService.Core.Options;
+using FaceRecoTrackService.Infrastructure.Repositories;
 using FaceRecoTrackService.Utils;
+using FaceRecoTrackService.Utils.QdrantUtil;
 using Microsoft.Extensions.Options;
 using SkiaSharp;
 
@@ -17,13 +19,22 @@ namespace FaceRecoTrackService.Services
     {
         private readonly FaceRecognitionOptions _faceOptions;
         private readonly PipelineOptions _pipelineOptions;
+        private readonly QdrantVectorManager _qdrantManager;
+        private readonly QdrantConfig _qdrantConfig;
+        private readonly PgFaceRepository _faceRepository;
 
         public FaceVerificationService(
             FaceRecognitionOptions faceOptions,
-            IOptions<PipelineOptions> pipelineOptions)
+            IOptions<PipelineOptions> pipelineOptions,
+            QdrantVectorManager qdrantManager,
+            QdrantConfig qdrantConfig,
+            PgFaceRepository faceRepository)
         {
             _faceOptions = faceOptions ?? throw new ArgumentNullException(nameof(faceOptions));
             _pipelineOptions = pipelineOptions?.Value ?? throw new ArgumentNullException(nameof(pipelineOptions));
+            _qdrantManager = qdrantManager ?? throw new ArgumentNullException(nameof(qdrantManager));
+            _qdrantConfig = qdrantConfig ?? throw new ArgumentNullException(nameof(qdrantConfig));
+            _faceRepository = faceRepository ?? throw new ArgumentNullException(nameof(faceRepository));
         }
 
         public Task<FaceCompareResponse> CompareAsync(FaceCompareRequest request, CancellationToken cancellationToken)
@@ -190,6 +201,168 @@ namespace FaceRecoTrackService.Services
             var base64 = EncodeImageToBase64(faceImage);
             faceImage.Dispose();
             return base64;
+        }
+
+        /// <summary>
+        /// 电脑人脸识别
+        /// </summary>
+        /// <param name="request">电脑人脸识别请求</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>电脑人脸识别响应</returns>
+        public async Task<ComputerFaceRecognitionResponse> ComputerRecognizeAsync(
+            ComputerFaceRecognitionRequest request, 
+            CancellationToken cancellationToken)
+        {
+            if (request == null) throw new ArgumentNullException(nameof(request));
+            if (string.IsNullOrWhiteSpace(request.Base64Image))
+                throw new ArgumentException("Base64图像不能为空");
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // 解码Base64图像
+            var bytes = Base64Helper.DecodeImage(request.Base64Image);
+            using var image = ImageUtils.LoadImage(bytes);
+            
+            // 初始化检测器和特征提取器
+            var detector = FaceDetector.GetInstance(_faceOptions);
+            var featureExtractor = FaceFeatureService.GetInstance(_faceOptions);
+
+            // 检测人脸
+            var detections = detector.DetectFaces(image);
+            if (detections == null || detections.Count == 0)
+            {
+                return new ComputerFaceRecognitionResponse
+                {
+                    Recognized = false,
+                    Message = "未检测到人脸"
+                };
+            }
+
+            // 提取最佳人脸
+            using var face = ExtractBestFace(image, detector, "图像", out var croppedFaceBase64);
+            
+            // 提取特征向量
+            var vector = ExtractVector(featureExtractor, face);
+            
+            // 使用Qdrant进行向量搜索
+            var matchResult = await MatchFaceAsync(vector, request.Threshold, cancellationToken);
+            
+            if (matchResult != null)
+            {
+                return new ComputerFaceRecognitionResponse
+                {
+                    Recognized = true,
+                    FaceId = matchResult.PersonId,
+                    UserName = matchResult.UserName,
+                    Similarity = matchResult.Score,
+                    Message = "识别成功",
+                    CroppedFaceBase64 = croppedFaceBase64
+                };
+            }
+            else
+            {
+                return new ComputerFaceRecognitionResponse
+                {
+                    Recognized = false,
+                    Message = "未识别到匹配的人脸",
+                    CroppedFaceBase64 = croppedFaceBase64
+                };
+            }
+        }
+
+        /// <summary>
+        /// 匹配人脸
+        /// </summary>
+        /// <param name="vector">人脸特征向量</param>
+        /// <param name="threshold">识别阈值</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>匹配结果</returns>
+        private async Task<MatchResult?> MatchFaceAsync(
+            float[] vector, 
+            double? threshold, 
+            CancellationToken cancellationToken)
+        {
+            // 使用用户指定的阈值或默认阈值
+            var similarityThreshold = threshold ?? _pipelineOptions.SimilarityThreshold;
+            var fallbackThreshold = _pipelineOptions.FallbackSimilarityThreshold;
+
+            // 尝试使用Qdrant进行向量搜索
+            try
+            {
+                var results = await _qdrantManager.SearchAsync(
+                    _qdrantConfig.CollectionName,
+                    vector,
+                    5,
+                    (float)fallbackThreshold,
+                    cancellationToken);
+
+                if (results != null && results.Count > 0)
+                {
+                    var bestResult = results.OrderByDescending(r => r.Score).First();
+                    if (bestResult.Score >= similarityThreshold)
+                    {
+                        if (Guid.TryParse(bestResult.PointId, out var personId))
+                        {
+                            // 获取人脸信息
+                            var faceInfo = await _faceRepository.GetFaceByIdAsync(personId, cancellationToken);
+                            return new MatchResult 
+                            {
+                                PersonId = personId, 
+                                UserName = faceInfo?.UserName,
+                                Score = bestResult.Score 
+                            };
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Qdrant搜索失败，回退到本地搜索
+                Console.WriteLine($"Qdrant搜索失败，回退到本地搜索: {ex.Message}");
+            }
+
+            // 回退到本地数据库搜索
+            var candidates = await _faceRepository.GetAllFaceVectorsAsync(cancellationToken);
+            if (candidates == null || candidates.Count == 0)
+                return null;
+
+            float bestScore = float.MinValue;
+            Guid bestId = Guid.Empty;
+            string? bestUserName = null;
+            
+            // 初始化特征提取器
+            var featureExtractor = FaceFeatureService.GetInstance(_faceOptions);
+            
+            foreach (var candidate in candidates)
+            {
+                if (candidate.Vector == null || candidate.Vector.Length == 0)
+                    continue;
+                if (candidate.Vector.Length != vector.Length)
+                    continue;
+
+                var score = featureExtractor.CalculateSimilarity(vector, candidate.Vector);
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestId = candidate.Id;
+                    bestUserName = candidate.UserName;
+                }
+            }
+
+            if (bestScore >= similarityThreshold && bestId != Guid.Empty)
+                return new MatchResult { PersonId = bestId, UserName = bestUserName, Score = bestScore };
+
+            return null;
+        }
+
+        /// <summary>
+        /// 匹配结果类
+        /// </summary>
+        private class MatchResult
+        {
+            public Guid PersonId { get; set; }
+            public string? UserName { get; set; }
+            public float Score { get; set; }
         }
     }
 }

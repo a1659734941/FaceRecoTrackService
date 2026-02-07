@@ -68,7 +68,6 @@ namespace FaceRecoTrackService.Infrastructure.Repositories
     user_name text NOT NULL,
     ip text NOT NULL,
     description text,
-    is_test boolean NOT NULL,
     image_base64 text,
     face_vector real[],
     created_at timestamptz NOT NULL DEFAULT now()

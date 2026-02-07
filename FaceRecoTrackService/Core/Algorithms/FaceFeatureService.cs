@@ -91,7 +91,7 @@ namespace FaceRecoTrackService.Core.Algorithms
                 throw new InvalidOperationException($"图片加载失败：{imagePath}");
 
             float[] inputData = PreprocessImage(image);
-            var inputTensor = new DenseTensor<float>(inputData, new[] { 1, InputChannels, _inputHeight, _inputWidth });
+            var inputTensor = new DenseTensor<float>(inputData, new[] { 1, _inputHeight, _inputWidth, InputChannels });
 
             using var results = _onnxSession.Run(new List<NamedOnnxValue>
             {
@@ -142,7 +142,7 @@ namespace FaceRecoTrackService.Core.Algorithms
                 CvInvoke.CvtColor(mat, rgbImage, ColorConversion.Bgr2Rgb);
 
                 float[] inputData = PreprocessImage(rgbImage);
-                var inputTensor = new DenseTensor<float>(inputData, new[] { 1, InputChannels, _inputHeight, _inputWidth });
+                var inputTensor = new DenseTensor<float>(inputData, new[] { 1, _inputHeight, _inputWidth, InputChannels });
 
                 using var results = _onnxSession.Run(new List<NamedOnnxValue>
                 {

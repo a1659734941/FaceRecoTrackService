@@ -8,7 +8,6 @@ namespace FaceRecoTrackService.Core.Models
         public string UserName { get; set; } = "";
         public string Ip { get; set; } = "";
         public string Description { get; set; } = "";
-        public bool IsTest { get; set; }
         public string? ImageBase64 { get; set; }
         public float[]? FaceVector { get; set; }
         public DateTime CreatedAtUtc { get; set; }

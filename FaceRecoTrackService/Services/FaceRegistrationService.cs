@@ -106,7 +106,6 @@ namespace FaceRecoTrackService.Services
                 UserName = request.UserName,
                 Ip = request.Ip ?? "",
                 Description = request.Description ?? "",
-                IsTest = request.IsTest,
                 ImageBase64 = request.Base64Image,
                 FaceVector = vector,
                 CreatedAtUtc = DateTime.UtcNow

@@ -1,0 +1,86 @@
+2026-02-08 00:02:42.300 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:02:43.655 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：2000ms，工作线程：2，队列容量：200
+2026-02-08 00:03:15.100 +08:00 [WRN] Failed to determine the https port for redirect.
+2026-02-08 00:04:40.945 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:04:44.092 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：2000ms，工作线程：2，队列容量：200
+2026-02-08 00:05:26.965 +08:00 [WRN] Failed to determine the https port for redirect.
+2026-02-08 00:09:51.979 +08:00 [ERR] BackgroundService failed
+Microsoft.ML.OnnxRuntime.OnnxRuntimeException: [ErrorCode:NoSuchFile] Load model from res/model/ArcFace.onnx failed:Load model res/model/ArcFace.onnx failed. File doesn't exist
+   at Microsoft.ML.OnnxRuntime.InferenceSession.Init(String modelPath, SessionOptions options, PrePackedWeightsContainer prepackedWeightsContainer)
+   at Microsoft.ML.OnnxRuntime.InferenceSession..ctor(String modelPath, SessionOptions options)
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService..ctor(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 59
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService.GetInstance(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 77
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.WorkerLoopAsync(ChannelReader`1 reader, CancellationToken cancellationToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 101
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.ExecuteAsync(CancellationToken stoppingToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 92
+   at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)
+2026-02-08 00:09:51.991 +08:00 [FTL] The HostOptions.BackgroundServiceExceptionBehavior is configured to StopHost. A BackgroundService has thrown an unhandled exception, and the IHost instance is stopping. To avoid this behavior, configure this to Ignore; however the BackgroundService will not be restarted.
+Microsoft.ML.OnnxRuntime.OnnxRuntimeException: [ErrorCode:NoSuchFile] Load model from res/model/ArcFace.onnx failed:Load model res/model/ArcFace.onnx failed. File doesn't exist
+   at Microsoft.ML.OnnxRuntime.InferenceSession.Init(String modelPath, SessionOptions options, PrePackedWeightsContainer prepackedWeightsContainer)
+   at Microsoft.ML.OnnxRuntime.InferenceSession..ctor(String modelPath, SessionOptions options)
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService..ctor(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 59
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService.GetInstance(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 77
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.WorkerLoopAsync(ChannelReader`1 reader, CancellationToken cancellationToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 101
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.ExecuteAsync(CancellationToken stoppingToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 92
+   at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)
+2026-02-08 00:13:17.947 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:13:18.548 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：2000ms，工作线程：2，队列容量：200
+2026-02-08 00:13:20.376 +08:00 [WRN] Failed to determine the https port for redirect.
+2026-02-08 00:16:39.393 +08:00 [ERR] BackgroundService failed
+Microsoft.ML.OnnxRuntime.OnnxRuntimeException: [ErrorCode:NoSuchFile] Load model from res/model/ArcFace.onnx failed:Load model res/model/ArcFace.onnx failed. File doesn't exist
+   at Microsoft.ML.OnnxRuntime.InferenceSession.Init(String modelPath, SessionOptions options, PrePackedWeightsContainer prepackedWeightsContainer)
+   at Microsoft.ML.OnnxRuntime.InferenceSession..ctor(String modelPath, SessionOptions options)
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService..ctor(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 59
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService.GetInstance(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 77
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.WorkerLoopAsync(ChannelReader`1 reader, CancellationToken cancellationToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 101
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.ExecuteAsync(CancellationToken stoppingToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 92
+   at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)
+2026-02-08 00:16:39.404 +08:00 [FTL] The HostOptions.BackgroundServiceExceptionBehavior is configured to StopHost. A BackgroundService has thrown an unhandled exception, and the IHost instance is stopping. To avoid this behavior, configure this to Ignore; however the BackgroundService will not be restarted.
+Microsoft.ML.OnnxRuntime.OnnxRuntimeException: [ErrorCode:NoSuchFile] Load model from res/model/ArcFace.onnx failed:Load model res/model/ArcFace.onnx failed. File doesn't exist
+   at Microsoft.ML.OnnxRuntime.InferenceSession.Init(String modelPath, SessionOptions options, PrePackedWeightsContainer prepackedWeightsContainer)
+   at Microsoft.ML.OnnxRuntime.InferenceSession..ctor(String modelPath, SessionOptions options)
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService..ctor(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 59
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService.GetInstance(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 77
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.WorkerLoopAsync(ChannelReader`1 reader, CancellationToken cancellationToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 101
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.ExecuteAsync(CancellationToken stoppingToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 92
+   at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)
+2026-02-08 00:16:43.254 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:16:43.991 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：2000ms，工作线程：2，队列容量：200
+2026-02-08 00:16:50.000 +08:00 [WRN] Failed to determine the https port for redirect.
+2026-02-08 00:18:38.789 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:18:39.302 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：2000ms，工作线程：2，队列容量：200
+2026-02-08 00:19:39.493 +08:00 [WRN] Failed to determine the https port for redirect.
+2026-02-08 00:23:33.552 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:23:34.210 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：2000ms，工作线程：2，队列容量：200
+2026-02-08 00:25:11.797 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:25:12.373 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：2000ms，工作线程：2，队列容量：200
+2026-02-08 00:25:58.653 +08:00 [WRN] Failed to determine the https port for redirect.
+2026-02-08 00:27:57.760 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:27:58.287 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：2000ms，工作线程：2，队列容量：200
+2026-02-08 00:28:53.053 +08:00 [WRN] Failed to determine the https port for redirect.
+2026-02-08 00:34:00.879 +08:00 [INF] === 硬件配置信息 ===
+2026-02-08 00:34:00.901 +08:00 [INF] CPU核心数: 12
+2026-02-08 00:34:00.903 +08:00 [INF] 进程ID: 9624
+2026-02-08 00:34:00.912 +08:00 [INF] 进程内存使用: 47 MB
+2026-02-08 00:34:00.913 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-08 00:34:00.981 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-08 00:34:00.982 +08:00 [INF] ==================
+2026-02-08 00:34:00.983 +08:00 [INF] 开始预加载模型...
+2026-02-08 00:34:01.210 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-08 00:34:02.115 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-08 00:34:02.116 +08:00 [INF] 模型预加载完成
+2026-02-08 00:34:02.127 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:34:02.674 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：2000ms，工作线程：2，队列容量：200
+2026-02-08 00:34:23.096 +08:00 [WRN] Failed to determine the https port for redirect.
+2026-02-08 00:39:20.193 +08:00 [INF] === 硬件配置信息 ===
+2026-02-08 00:39:20.217 +08:00 [INF] CPU核心数: 12
+2026-02-08 00:39:20.217 +08:00 [INF] 进程ID: 4292
+2026-02-08 00:39:20.225 +08:00 [INF] 进程内存使用: 47 MB
+2026-02-08 00:39:20.226 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-08 00:39:20.294 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-08 00:39:20.294 +08:00 [INF] ==================
+2026-02-08 00:39:20.296 +08:00 [INF] 开始预加载模型...
+2026-02-08 00:39:20.510 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-08 00:39:21.222 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-08 00:39:21.223 +08:00 [INF] 模型预加载完成
+2026-02-08 00:39:21.237 +08:00 [INF] Qdrant已在 192.168.2.150:6334 运行，跳过内置启动。
+2026-02-08 00:39:21.787 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500

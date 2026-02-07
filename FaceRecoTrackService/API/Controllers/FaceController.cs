@@ -77,22 +77,28 @@ namespace FaceRecoTrackService.API.Controllers
         }
 
         /// <summary>
-        /// 获取PG库已注册人脸数量
+        /// 获取PG库已注册人脸数量和完整信息列表
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>返回PG库中人脸数量</returns>
+        /// <returns>返回PG库中人脸数量和完整信息列表</returns>
         [HttpGet("count")]
-        [ProducesResponseType(typeof(ApiResponse<long>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<FaceCountResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Count(CancellationToken cancellationToken)
         {
             try
             {
                 var count = await _queryService.GetCountAsync(cancellationToken);
-                return Ok(ApiResponse<long>.Ok(count, "查询成功"));
+                var faces = await _queryService.GetAllFacesAsync(cancellationToken);
+                var response = new FaceCountResponse
+                {
+                    Count = count,
+                    Faces = faces as List<FaceInfoResponse> ?? faces.ToList()
+                };
+                return Ok(ApiResponse<FaceCountResponse>.Ok(response, "查询成功"));
             }
             catch (Exception ex)
             {
-                return Ok(ApiResponse<long>.Fail(400, $"查询失败：{ex.Message}"));
+                return Ok(ApiResponse<FaceCountResponse>.Fail(400, $"查询失败：{ex.Message}"));
             }
         }
 
@@ -235,6 +241,44 @@ namespace FaceRecoTrackService.API.Controllers
             {
                 // 处理其他错误
                 return Ok(ApiResponse<FaceCheckResponse>.Fail(400, $"检测失败：{ex.Message}"));
+            }
+        }
+
+        /// <summary>
+        /// 电脑人脸识别
+        /// </summary>
+        /// <param name="request">电脑人脸识别请求</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>电脑人脸识别响应</returns>
+        [HttpPost("computer/recognize")]
+        [ProducesResponseType(typeof(ApiResponse<ComputerFaceRecognitionResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> ComputerRecognize([FromBody] ComputerFaceRecognitionRequest request, CancellationToken cancellationToken)
+        {
+            // 验证请求参数是否合法
+            if (!ModelState.IsValid)
+            {
+                // 收集所有验证错误信息
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                // 返回400错误和错误信息
+                return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Fail(400, string.Join(", ", errors)));
+            }
+            
+            try
+            {
+                // 调用验证服务进行电脑人脸识别
+                var result = await _verificationService.ComputerRecognizeAsync(request, cancellationToken);
+                // 返回识别结果
+                return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Ok(result, "识别完成"));
+            }
+            catch (ArgumentException ex)
+            {
+                // 处理参数错误
+                return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Fail(400, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                // 处理其他错误
+                return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Fail(400, $"识别失败：{ex.Message}"));
             }
         }
     }

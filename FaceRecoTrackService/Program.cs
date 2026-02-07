@@ -1,3 +1,4 @@
+using FaceRecoTrackService.Core.Algorithms;
 using FaceRecoTrackService.Core.Options;
 using FaceRecoTrackService.Infrastructure.Repositories;
 using FaceRecoTrackService.Services;
@@ -9,6 +10,7 @@ using Serilog.Events;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using System.IO;
 var builder = WebApplication.CreateBuilder(args);
 Console.InputEncoding = Encoding.UTF8;
 Console.OutputEncoding = Encoding.UTF8;
@@ -115,6 +117,12 @@ builder.Services.AddHostedService<FtpRecognitionWorker>();
 
 var app = builder.Build();
 
+// 检测硬件配置
+DetectHardwareConfig(app.Logger);
+
+// 预加载模型
+await PreloadModels(app.Services, app.Logger, app.Lifetime.ApplicationStopping);
+
 var qdrantConfig = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<QdrantConfig>>().Value;
 Process? qdrantProcess = null;
 try
@@ -176,4 +184,111 @@ try
 finally
 {
     Log.CloseAndFlush();
+}
+
+// 检测硬件配置
+static void DetectHardwareConfig(Microsoft.Extensions.Logging.ILogger logger)
+{
+    logger.LogInformation("=== 硬件配置信息 ===");
+    
+    // 检测CPU信息
+    try
+    {
+        logger.LogInformation($"CPU核心数: {Environment.ProcessorCount}");
+        // 尝试获取进程信息
+        using var process = Process.GetCurrentProcess();
+        logger.LogInformation($"进程ID: {process.Id}");
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning($"获取CPU信息失败: {ex.Message}");
+    }
+    
+    // 检测RAM信息
+    try
+    {
+        // 使用Runtime获取内存信息
+        using var process = Process.GetCurrentProcess();
+        var memoryMB = process.WorkingSet64 / (1024 * 1024);
+        logger.LogInformation($"进程内存使用: {memoryMB} MB");
+        logger.LogInformation($".NET运行时版本: {Environment.Version}");
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning($"获取RAM信息失败: {ex.Message}");
+    }
+    
+    // 检测GPU信息（简化版）
+    try
+    {
+        // 检查是否有GPU加速可用
+        var hasGpu = false;
+        try
+        {
+            // 尝试检查ONNX Runtime是否支持CUDA
+            var sessionOptions = new Microsoft.ML.OnnxRuntime.SessionOptions();
+            try
+            {
+                sessionOptions.AppendExecutionProvider_CUDA();
+                hasGpu = true;
+            }
+            catch
+            {
+                // CUDA不可用
+            }
+        }
+        catch
+        {
+            // 忽略错误
+        }
+        
+        if (hasGpu)
+        {
+            logger.LogInformation("GPU: 检测到GPU加速支持");
+        }
+        else
+        {
+            logger.LogInformation("GPU: 未检测到GPU加速支持");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning($"获取GPU信息失败: {ex.Message}");
+        logger.LogInformation("GPU: 检测失败");
+    }
+    
+    logger.LogInformation("==================");
+}
+
+// 预加载模型
+static async Task PreloadModels(IServiceProvider services, Microsoft.Extensions.Logging.ILogger logger, CancellationToken cancellationToken)
+{
+    logger.LogInformation("开始预加载模型...");
+    
+    using var scope = services.CreateScope();
+    var faceOptions = scope.ServiceProvider.GetRequiredService<FaceRecognitionOptions>();
+    
+    try
+    {
+        // 预加载人脸检测器模型（YOLOv8s-face）
+        var detector = FaceDetector.GetInstance(faceOptions);
+        logger.LogInformation($"加载了人脸检测模型: {Path.GetFileName(faceOptions.YoloModelPath)}");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, $"加载人脸检测模型失败: {faceOptions.YoloModelPath}");
+    }
+    
+    try
+    {
+        // 预加载人脸特征提取模型（ArcFace）
+        var featureService = FaceFeatureService.GetInstance(faceOptions);
+        logger.LogInformation($"加载了人脸特征提取模型: {Path.GetFileName(faceOptions.FaceNetModelPath)}");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, $"加载人脸特征提取模型失败: {faceOptions.FaceNetModelPath}");
+    }
+    
+    logger.LogInformation("模型预加载完成");
 }

@@ -32,10 +32,5 @@ namespace FaceRecoTrackService.Core.Dtos
         /// </summary>
         [MaxLength(500, ErrorMessage = "描述长度不能超过500个字符")]
         public string Description { get; set; } = "";
-        
-        /// <summary>
-        /// 是否为测试数据
-        /// </summary>
-        public bool IsTest { get; set; }
     }
 }

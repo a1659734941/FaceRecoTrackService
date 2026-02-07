@@ -24,6 +24,11 @@ namespace FaceRecoTrackService.Services
         private readonly FtpFolderSnapshotClient _snapshotClient;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<FtpRecognitionWorker> _logger;
+        
+        // 缓存所有人脸向量，避免重复从数据库获取
+        private readonly Dictionary<Guid, float[]> _faceVectorsCache = new Dictionary<Guid, float[]>();
+        private DateTime _lastCacheUpdate = DateTime.MinValue;
+        private const int CacheUpdateIntervalMs = 120000; // 2分钟更新一次缓存
 
         public FtpRecognitionWorker(
             IOptions<PipelineOptions> pipelineOptions,
@@ -168,6 +173,36 @@ namespace FaceRecoTrackService.Services
             }
         }
 
+        private async Task UpdateFaceVectorsCacheAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var faceRepository = scope.ServiceProvider.GetRequiredService<PgFaceRepository>();
+                var candidates = await faceRepository.GetAllFaceVectorsAsync(cancellationToken);
+                if (candidates != null && candidates.Count > 0)
+                {
+                    lock (_faceVectorsCache)
+                    {
+                        _faceVectorsCache.Clear();
+                        foreach (var candidate in candidates)
+                        {
+                            if (candidate.Vector != null && candidate.Vector.Length > 0)
+                            {
+                                _faceVectorsCache[candidate.Id] = candidate.Vector;
+                            }
+                        }
+                    }
+                    _lastCacheUpdate = DateTime.UtcNow;
+                    _logger.LogInformation("人脸向量缓存更新完成，缓存数量: {Count}", _faceVectorsCache.Count);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "更新人脸向量缓存失败");
+            }
+        }
+
         private async Task<MatchResult?> MatchFaceAsync(
             FaceFeatureService featureExtractor,
             PgFaceRepository faceRepository,
@@ -185,6 +220,12 @@ namespace FaceRecoTrackService.Services
                     _faceOptions.VectorSize,
                     vector.Length);
                 vector = FaceFeatureService.ResizeVector(vector, _faceOptions.VectorSize);
+            }
+            
+            // 检查并更新缓存
+            if ((DateTime.UtcNow - _lastCacheUpdate).TotalMilliseconds > CacheUpdateIntervalMs)
+            {
+                await UpdateFaceVectorsCacheAsync(cancellationToken);
             }
 
             // Try to use Qdrant for similarity search if available
@@ -227,24 +268,57 @@ namespace FaceRecoTrackService.Services
             }
 
             // Fallback to local search if Qdrant is not available
-            var candidates = await faceRepository.GetAllFaceVectorsAsync(cancellationToken);
-            if (candidates == null || candidates.Count == 0)
-                return null;
-
             float bestScore = float.MinValue;
             Guid bestId = Guid.Empty;
-            foreach (var candidate in candidates)
+            
+            // 使用缓存的人脸向量
+            Dictionary<Guid, float[]> cacheSnapshot;
+            lock (_faceVectorsCache)
             {
-                if (candidate.Vector == null || candidate.Vector.Length == 0)
-                    continue;
-                if (candidate.Vector.Length != vector.Length)
-                    continue;
-
-                var score = featureExtractor.CalculateSimilarity(vector, candidate.Vector);
-                if (score > bestScore)
+                cacheSnapshot = new Dictionary<Guid, float[]>(_faceVectorsCache);
+            }
+            
+            if (cacheSnapshot.Count == 0)
+            {
+                // 缓存为空时，从数据库获取
+                var candidates = await faceRepository.GetAllFaceVectorsAsync(cancellationToken);
+                if (candidates == null || candidates.Count == 0)
+                    return null;
+                
+                foreach (var candidate in candidates)
                 {
-                    bestScore = score;
-                    bestId = candidate.Id;
+                    if (candidate.Vector == null || candidate.Vector.Length == 0)
+                        continue;
+                    if (candidate.Vector.Length != vector.Length)
+                        continue;
+
+                    var score = featureExtractor.CalculateSimilarity(vector, candidate.Vector);
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        bestId = candidate.Id;
+                    }
+                }
+            }
+            else
+            {
+                // 使用缓存进行搜索
+                foreach (var kvp in cacheSnapshot)
+                {
+                    var candidateId = kvp.Key;
+                    var candidateVector = kvp.Value;
+                    
+                    if (candidateVector == null || candidateVector.Length == 0)
+                        continue;
+                    if (candidateVector.Length != vector.Length)
+                        continue;
+
+                    var score = featureExtractor.CalculateSimilarity(vector, candidateVector);
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        bestId = candidateId;
+                    }
                 }
             }
 

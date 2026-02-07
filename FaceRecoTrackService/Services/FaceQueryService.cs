@@ -39,7 +39,6 @@ namespace FaceRecoTrackService.Services
                 UserName = entity.UserName,
                 Ip = entity.Ip,
                 Description = entity.Description,
-                IsTest = entity.IsTest,
                 ImageBase64 = null,
                 CreatedAtUtc = entity.CreatedAtUtc
             };
@@ -50,6 +49,25 @@ namespace FaceRecoTrackService.Services
             return _qdrantManager.GetCollectionPointsCountAsync(
                 _qdrantConfig.CollectionName,
                 cancellationToken);
+        }
+
+        public Task<IReadOnlyList<Guid>> GetAllFaceIdsAsync(CancellationToken cancellationToken)
+        {
+            return _faceRepository.GetAllFaceIdsAsync(cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<FaceInfoResponse>> GetAllFacesAsync(CancellationToken cancellationToken)
+        {
+            var entities = await _faceRepository.GetAllFacesAsync(cancellationToken);
+            return entities.Select(entity => new FaceInfoResponse
+            {
+                Id = entity.Id,
+                UserName = entity.UserName,
+                Ip = entity.Ip,
+                Description = entity.Description,
+                ImageBase64 = null,
+                CreatedAtUtc = entity.CreatedAtUtc
+            }).ToList();
         }
     }
 }
