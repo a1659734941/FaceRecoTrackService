@@ -58,7 +58,7 @@ namespace FaceRecoTrackService.Services
                 throw new InvalidOperationException("图像解码失败：无法生成图像对象");
 
             // 人脸检测与清晰度筛选
-            using var detector = new FaceDetector(_faceOptions);
+            var detector = FaceDetector.GetInstance(_faceOptions);
             var detections = detector.DetectFaces(image);
             if (detections == null || detections.Count == 0)
                 throw new InvalidOperationException("未检测到人脸");
@@ -87,7 +87,7 @@ namespace FaceRecoTrackService.Services
             encoded.SaveTo(stream);
             stream.Position = 0;
 
-            using var featureExtractor = new FaceFeatureService(_faceOptions);
+            var featureExtractor = FaceFeatureService.GetInstance(_faceOptions);
             var vector = featureExtractor.ExtractFeaturesFromStream(stream);
             if (vector == null || vector.Length == 0)
                 throw new InvalidOperationException("人脸特征提取失败：特征向量为空");

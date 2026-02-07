@@ -15,11 +15,55 @@ namespace FaceRecoTrackService.Infrastructure.Repositories
 
         public async Task EnsureSchemaAsync(CancellationToken cancellationToken)
         {
-            await using var conn = new NpgsqlConnection(_connectionString);
+            // First, connect to postgres database to create FaceTrack database if it doesn't exist
+            var builder = new Npgsql.NpgsqlConnectionStringBuilder(_connectionString);
+            builder.Database = "postgres";
+            var postgresConnString = builder.ToString();
+            
+            await using (var postgresConn = new Npgsql.NpgsqlConnection(postgresConnString))
+            {
+                await postgresConn.OpenAsync(cancellationToken);
+                
+                // Check if database exists
+                const string databaseName = "facetrack";
+                const string checkDbSql = "SELECT 1 FROM pg_database WHERE datname = @databaseName";
+                await using (var checkCmd = new Npgsql.NpgsqlCommand(checkDbSql, postgresConn))
+                {
+                    checkCmd.Parameters.AddWithValue("databaseName", databaseName);
+                    var exists = await checkCmd.ExecuteScalarAsync(cancellationToken);
+                    if (exists == null)
+                    {
+                        // Create database directly (not in a function)
+                        // Need to use a separate connection without transaction
+                        var createDbBuilder = new Npgsql.NpgsqlConnectionStringBuilder(postgresConnString);
+                        createDbBuilder.Database = "postgres";
+                        createDbBuilder.CommandTimeout = 30;
+                        
+                        using (var createDbConn = new Npgsql.NpgsqlConnection(createDbBuilder.ToString()))
+                        {
+                            await createDbConn.OpenAsync(cancellationToken);
+                            const string createDbSql = "CREATE DATABASE @databaseName";
+                            using (var createCmd = new Npgsql.NpgsqlCommand())
+                            {
+                                createCmd.Connection = createDbConn;
+                                createCmd.CommandText = "CREATE DATABASE " + databaseName;
+                                createCmd.CommandTimeout = 30;
+                                await createCmd.ExecuteNonQueryAsync(cancellationToken);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Now connect to FaceTrack database
+            var faceTrackBuilder = new Npgsql.NpgsqlConnectionStringBuilder(_connectionString);
+            faceTrackBuilder.Database = "facetrack";
+            var faceTrackConnString = faceTrackBuilder.ToString();
+            
+            await using var conn = new Npgsql.NpgsqlConnection(faceTrackConnString);
             await conn.OpenAsync(cancellationToken);
 
-            const string sql = @"
-CREATE TABLE IF NOT EXISTS face_persons (
+            const string sql = @"CREATE TABLE IF NOT EXISTS face_persons (
     id uuid PRIMARY KEY,
     user_name text NOT NULL,
     ip text NOT NULL,
@@ -62,6 +106,15 @@ CREATE TABLE IF NOT EXISTS track_records (
 );
 
 CREATE INDEX IF NOT EXISTS idx_track_person_time ON track_records(person_id, snap_time DESC);
+
+-- Additional indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_face_persons_username ON face_persons(user_name);
+CREATE INDEX IF NOT EXISTS idx_face_persons_created_at ON face_persons(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_record_cameras_location ON record_cameras(location_name);
+CREATE INDEX IF NOT EXISTS idx_track_records_camera ON track_records(snap_camera_ip);
+CREATE INDEX IF NOT EXISTS idx_track_records_record_camera ON track_records(record_camera_ip);
+CREATE INDEX IF NOT EXISTS idx_track_records_snap_time ON track_records(snap_time DESC);
+CREATE INDEX IF NOT EXISTS idx_track_records_location ON track_records(snap_location);
 ";
 
             await using (var cmd = new NpgsqlCommand(sql, conn))

@@ -41,8 +41,8 @@ namespace FaceRecoTrackService.Services
 
             using var image1 = ImageUtils.LoadImage(bytes1);
             using var image2 = ImageUtils.LoadImage(bytes2);
-            using var detector = new FaceDetector(_faceOptions);
-            using var featureExtractor = new FaceFeatureService(_faceOptions);
+            var detector = FaceDetector.GetInstance(_faceOptions);
+            var featureExtractor = FaceFeatureService.GetInstance(_faceOptions);
 
             using var face1 = ExtractBestFace(image1, detector, "图片1", out var faceBase64_1);
             using var face2 = ExtractBestFace(image2, detector, "图片2", out var faceBase64_2);
@@ -70,7 +70,7 @@ namespace FaceRecoTrackService.Services
 
             var bytes = Base64Helper.DecodeImage(request.Base64Image);
             using var image = ImageUtils.LoadImage(bytes);
-            using var detector = new FaceDetector(_faceOptions);
+            var detector = FaceDetector.GetInstance(_faceOptions);
 
             var detections = detector.DetectFaces(image);
             if (detections == null || detections.Count == 0)

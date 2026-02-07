@@ -97,8 +97,8 @@ namespace FaceRecoTrackService.Services
             ChannelReader<FolderSnapshotResult> reader,
             CancellationToken cancellationToken)
         {
-            using var faceDetector = new FaceDetector(_faceOptions);
-            using var featureExtractor = new FaceFeatureService(_faceOptions);
+            var faceDetector = FaceDetector.GetInstance(_faceOptions);
+            var featureExtractor = FaceFeatureService.GetInstance(_faceOptions);
 
             while (await reader.WaitToReadAsync(cancellationToken))
             {
@@ -187,6 +187,46 @@ namespace FaceRecoTrackService.Services
                 vector = FaceFeatureService.ResizeVector(vector, _faceOptions.VectorSize);
             }
 
+            // Try to use Qdrant for similarity search if available
+            using var scope = _scopeFactory.CreateScope();
+            var qdrantManager = scope.ServiceProvider.GetService<FaceRecoTrackService.Utils.QdrantUtil.QdrantVectorManager>();
+            if (qdrantManager != null)
+            {
+                try
+                {
+                    var results = await qdrantManager.SearchAsync(
+                        "face_collection",
+                        vector,
+                        5,
+                        _pipelineOptions.FallbackSimilarityThreshold,
+                        cancellationToken);
+
+                    if (results != null && results.Count > 0)
+                    {
+                        var bestResult = results.OrderByDescending(r => r.Score).First();
+                        if (bestResult.Score >= _pipelineOptions.SimilarityThreshold)
+                        {
+                            if (Guid.TryParse(bestResult.PointId, out var personId))
+                            {
+                                return new MatchResult { PersonId = personId, Score = bestResult.Score };
+                            }
+                        }
+                        else if (bestResult.Score >= _pipelineOptions.FallbackSimilarityThreshold)
+                        {
+                            if (Guid.TryParse(bestResult.PointId, out var personId))
+                            {
+                                return new MatchResult { PersonId = personId, Score = bestResult.Score };
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Qdrant搜索失败，回退到本地搜索");
+                }
+            }
+
+            // Fallback to local search if Qdrant is not available
             var candidates = await faceRepository.GetAllFaceVectorsAsync(cancellationToken);
             if (candidates == null || candidates.Count == 0)
                 return null;

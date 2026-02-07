@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Emgu.CV;
@@ -24,23 +25,60 @@ namespace FaceRecoTrackService.Core.Algorithms
         private readonly string _inputName;
         private bool _disposed;
 
-        public FaceFeatureService(FaceRecognitionOptions options)
+        private static readonly Dictionary<string, FaceFeatureService> _instanceCache = new Dictionary<string, FaceFeatureService>();
+        private static readonly object _lock = new object();
+
+        private FaceFeatureService(FaceRecognitionOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (string.IsNullOrEmpty(options.FaceNetModelPath))
                 throw new ArgumentNullException(nameof(options.FaceNetModelPath), "模型路径不能为空");
 
             var sessionOptions = new Microsoft.ML.OnnxRuntime.SessionOptions();
-            if (options.OnnxIntraOpNumThreads > 0)
-                sessionOptions.IntraOpNumThreads = options.OnnxIntraOpNumThreads;
-            if (options.OnnxInterOpNumThreads > 0)
-                sessionOptions.InterOpNumThreads = options.OnnxInterOpNumThreads;
+            
+            // Set thread counts for better performance
+            int intraOpThreads = options.OnnxIntraOpNumThreads > 0 ? options.OnnxIntraOpNumThreads : Environment.ProcessorCount;
+            int interOpThreads = options.OnnxInterOpNumThreads > 0 ? options.OnnxInterOpNumThreads : Math.Max(1, Environment.ProcessorCount / 2);
+            sessionOptions.IntraOpNumThreads = intraOpThreads;
+            sessionOptions.InterOpNumThreads = interOpThreads;
+            
+            // Enable memory optimization
+            sessionOptions.EnableMemoryPattern = true;
+            sessionOptions.OptimizedModelFilePath = Path.Combine(Path.GetDirectoryName(options.FaceNetModelPath) ?? string.Empty, $"{Path.GetFileNameWithoutExtension(options.FaceNetModelPath)}.optimized.onnx");
+            
+            // Try to enable CUDA if available (commented out for now, can be enabled if GPU is available)
+            // try
+            // {
+            //     sessionOptions.AppendExecutionProvider_CUDA();
+            // }
+            // catch
+            // {
+            //     // CUDA not available, fall back to CPU
+            // }
 
             _onnxSession = new InferenceSession(options.FaceNetModelPath, sessionOptions);
             _config = options;
             _inputWidth = Math.Max(1, options.FeatureInputWidth);
             _inputHeight = Math.Max(1, options.FeatureInputHeight);
             _inputName = _onnxSession.InputMetadata.Keys.FirstOrDefault() ?? "input";
+        }
+
+        public static FaceFeatureService GetInstance(FaceRecognitionOptions options)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (string.IsNullOrEmpty(options.FaceNetModelPath))
+                throw new ArgumentNullException(nameof(options.FaceNetModelPath), "模型路径不能为空");
+
+            string key = options.FaceNetModelPath;
+            lock (_lock)
+            {
+                if (!_instanceCache.TryGetValue(key, out var instance))
+                {
+                    instance = new FaceFeatureService(options);
+                    _instanceCache[key] = instance;
+                }
+                return instance;
+            }
         }
 
         /// <summary>
@@ -86,48 +124,74 @@ namespace FaceRecoTrackService.Core.Algorithms
         /// </summary>
         public float[] ExtractFeaturesFromStream(Stream imageStream)
         {
-            byte[] imageBytes = new byte[imageStream.Length];
-            imageStream.Read(imageBytes, 0, imageBytes.Length);
+            byte[] imageBytes;
+            using (var memoryStream = new MemoryStream())
+            {
+                imageStream.CopyTo(memoryStream);
+                imageBytes = memoryStream.ToArray();
+            }
 
             using var mat = new Mat();
-            CvInvoke.Imdecode(imageBytes, ImreadModes.ColorBgr, mat);
-            if (mat.IsEmpty)
-                throw new InvalidOperationException("从流加载图像失败");
-
-            using var rgbImage = new Mat();
-            CvInvoke.CvtColor(mat, rgbImage, ColorConversion.Bgr2Rgb);
-
-            float[] inputData = PreprocessImage(rgbImage);
-            var inputTensor = new DenseTensor<float>(inputData, new[] { 1, InputChannels, _inputHeight, _inputWidth });
-
-            using var results = _onnxSession.Run(new List<NamedOnnxValue>
+            try
             {
-                NamedOnnxValue.CreateFromTensor(_inputName, inputTensor)
-            });
+                CvInvoke.Imdecode(imageBytes, ImreadModes.ColorBgr, mat);
+                if (mat.IsEmpty)
+                    throw new InvalidOperationException("从流加载图像失败");
 
-            return results.First().AsTensor<float>().ToArray();
+                using var rgbImage = new Mat();
+                CvInvoke.CvtColor(mat, rgbImage, ColorConversion.Bgr2Rgb);
+
+                float[] inputData = PreprocessImage(rgbImage);
+                var inputTensor = new DenseTensor<float>(inputData, new[] { 1, InputChannels, _inputHeight, _inputWidth });
+
+                using var results = _onnxSession.Run(new List<NamedOnnxValue>
+                {
+                    NamedOnnxValue.CreateFromTensor(_inputName, inputTensor)
+                });
+
+                return results.First().AsTensor<float>().ToArray();
+            }
+            catch
+            {
+                mat.Dispose();
+                throw;
+            }
         }
 
         private Mat LoadImageAsRgb(string imagePath)
         {
             var image = CvInvoke.Imread(imagePath, ImreadModes.ColorBgr);
-            if (image.IsEmpty) return image;
+            if (image.IsEmpty)
+            {
+                return image;
+            }
 
             var rgbImage = new Mat();
-            switch (image.NumberOfChannels)
+            try
             {
-                case 1:
-                    CvInvoke.CvtColor(image, rgbImage, ColorConversion.Gray2Rgb);
-                    break;
-                case 4:
-                    CvInvoke.CvtColor(image, rgbImage, ColorConversion.Bgra2Rgb);
-                    break;
-                default:
-                    CvInvoke.CvtColor(image, rgbImage, ColorConversion.Bgr2Rgb);
-                    break;
+                switch (image.NumberOfChannels)
+                {
+                    case 1:
+                        CvInvoke.CvtColor(image, rgbImage, ColorConversion.Gray2Rgb);
+                        break;
+                    case 4:
+                        CvInvoke.CvtColor(image, rgbImage, ColorConversion.Bgra2Rgb);
+                        break;
+                    default:
+                        CvInvoke.CvtColor(image, rgbImage, ColorConversion.Bgr2Rgb);
+                        break;
+                }
+                return rgbImage;
             }
-            image.Dispose();
-            return rgbImage;
+            catch
+            {
+                rgbImage.Dispose();
+                throw;
+            }
+            finally
+            {
+                image.Dispose();
+            }
         }
 
         private float[] PreprocessImage(Mat rgbImage)

@@ -22,7 +22,10 @@ namespace FaceRecoTrackService.Core.Algorithms
         private readonly System.Drawing.Size _inputSize = new System.Drawing.Size(640, 640);
         private bool _disposed;
 
-        public FaceDetector(FaceRecognitionOptions config)
+        private static readonly Dictionary<string, FaceDetector> _instanceCache = new Dictionary<string, FaceDetector>();
+        private static readonly object _lock = new object();
+
+        private FaceDetector(FaceRecognitionOptions config)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             
@@ -35,12 +38,45 @@ namespace FaceRecoTrackService.Core.Algorithms
             try
             {
                 _net = DnnInvoke.ReadNetFromONNX(_config.YoloModelPath);
-                _net.SetPreferableBackend(Emgu.CV.Dnn.Backend.Default);
+                
+                // Optimize backend and target
+                _net.SetPreferableBackend(Emgu.CV.Dnn.Backend.OpenCV);
                 _net.SetPreferableTarget(Target.Cpu);
+                
+                // Enable CUDA if available (commented out for now, can be enabled if GPU is available)
+                // try
+                // {
+                //     _net.SetPreferableBackend(Emgu.CV.Dnn.Backend.Cuda);
+                //     _net.SetPreferableTarget(Target.Cuda);
+                // }
+                // catch
+                // {
+                //     // CUDA not available, fall back to CPU
+                //     _net.SetPreferableBackend(Emgu.CV.Dnn.Backend.OpenCV);
+                //     _net.SetPreferableTarget(Target.Cpu);
+                // }
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException($"加载ONNX模型失败: {_config.YoloModelPath}", ex);
+            }
+        }
+
+        public static FaceDetector GetInstance(FaceRecognitionOptions config)
+        {
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            if (string.IsNullOrWhiteSpace(config.YoloModelPath))
+                throw new ArgumentException("YoloModelPath配置不能为空", nameof(config));
+
+            string key = config.YoloModelPath;
+            lock (_lock)
+            {
+                if (!_instanceCache.TryGetValue(key, out var instance))
+                {
+                    instance = new FaceDetector(config);
+                    _instanceCache[key] = instance;
+                }
+                return instance;
             }
         }
 
@@ -204,8 +240,16 @@ namespace FaceRecoTrackService.Core.Algorithms
             if (data == null)
                 throw new InvalidOperationException("图像编码失败：无法生成PNG数据");
             var mat = new Mat();
-            CvInvoke.Imdecode(data.ToArray(), ImreadModes.ColorBgr, mat);
-            return mat;
+            try
+            {
+                CvInvoke.Imdecode(data.ToArray(), ImreadModes.ColorBgr, mat);
+                return mat;
+            }
+            catch
+            {
+                mat.Dispose();
+                throw;
+            }
         }
 
         private static List<ObjectDetection> ApplyNms(

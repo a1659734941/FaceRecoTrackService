@@ -27,13 +27,25 @@ namespace FaceRecoTrackService.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<FaceCameraResponse>), 200)]
         public async Task<IActionResult> AddFaceCamera([FromBody] AddFaceCameraRequest request, CancellationToken cancellationToken)
         {
+            // 验证请求参数是否合法
+            if (!ModelState.IsValid)
+            {
+                // 收集所有验证错误信息
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                // 返回400错误和错误信息
+                return Ok(ApiResponse<FaceCameraResponse>.Fail(400, string.Join(", ", errors)));
+            }
+            
             try
             {
+                // 调用摄像头服务添加人脸摄像头
                 var result = await _cameraService.AddFaceCameraAsync(request, cancellationToken);
+                // 返回添加成功的结果
                 return Ok(ApiResponse<FaceCameraResponse>.Ok(result, "新增成功"));
             }
             catch (System.ArgumentException ex)
             {
+                // 处理参数错误
                 return Ok(ApiResponse<FaceCameraResponse>.Fail(400, ex.Message));
             }
         }
@@ -43,13 +55,25 @@ namespace FaceRecoTrackService.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<RecordCameraResponse>), 200)]
         public async Task<IActionResult> AddRecordCamera([FromBody] AddRecordCameraRequest request, CancellationToken cancellationToken)
         {
+            // 验证请求参数是否合法
+            if (!ModelState.IsValid)
+            {
+                // 收集所有验证错误信息
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                // 返回400错误和错误信息
+                return Ok(ApiResponse<RecordCameraResponse>.Fail(400, string.Join(", ", errors)));
+            }
+            
             try
             {
+                // 调用摄像头服务添加录像摄像头
                 var result = await _cameraService.AddRecordCameraAsync(request, cancellationToken);
+                // 返回添加成功的结果
                 return Ok(ApiResponse<RecordCameraResponse>.Ok(result, "新增成功"));
             }
             catch (System.ArgumentException ex)
             {
+                // 处理参数错误
                 return Ok(ApiResponse<RecordCameraResponse>.Fail(400, ex.Message));
             }
         }
@@ -77,17 +101,30 @@ namespace FaceRecoTrackService.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<long>), 200)]
         public async Task<IActionResult> BindCameras([FromBody] BindCamerasRequest request, CancellationToken cancellationToken)
         {
+            // 验证请求参数是否合法
+            if (!ModelState.IsValid)
+            {
+                // 收集所有验证错误信息
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                // 返回400错误和错误信息
+                return Ok(ApiResponse<long>.Fail(400, string.Join(", ", errors)));
+            }
+            
             try
             {
+                // 调用摄像头服务绑定摄像头
                 var mappingId = await _cameraService.BindCamerasAsync(request, cancellationToken);
+                // 返回绑定成功的结果
                 return Ok(ApiResponse<long>.Ok(mappingId, "绑定成功"));
             }
             catch (System.ArgumentException ex)
             {
+                // 处理参数错误
                 return Ok(ApiResponse<long>.Fail(400, ex.Message));
             }
             catch (System.InvalidOperationException ex)
             {
+                // 处理冲突错误（如重复绑定）
                 return Ok(ApiResponse<long>.Fail(409, ex.Message));
             }
         }
@@ -106,17 +143,30 @@ namespace FaceRecoTrackService.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
         public async Task<IActionResult> UpdateBinding(long mappingId, [FromBody] UpdateBindingRequest request, CancellationToken cancellationToken)
         {
+            // 验证请求参数是否合法
+            if (!ModelState.IsValid)
+            {
+                // 收集所有验证错误信息
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                // 返回400错误和错误信息
+                return Ok(ApiResponse<bool>.Fail(400, string.Join(", ", errors)));
+            }
+            
             try
             {
+                // 调用摄像头服务更新绑定关系
                 var ok = await _cameraService.UpdateBindingAsync(mappingId, request, cancellationToken);
+                // 返回更新结果
                 return Ok(ApiResponse<bool>.Ok(ok, ok ? "修改成功" : "未变更"));
             }
             catch (System.ArgumentException ex)
             {
+                // 处理参数错误
                 return Ok(ApiResponse<bool>.Fail(400, ex.Message));
             }
             catch (System.InvalidOperationException ex)
             {
+                // 处理冲突错误
                 return Ok(ApiResponse<bool>.Fail(409, ex.Message));
             }
         }
@@ -126,13 +176,25 @@ namespace FaceRecoTrackService.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<long>), 200)]
         public async Task<IActionResult> ForceBindCameras([FromBody] ForceBindCamerasRequest request, CancellationToken cancellationToken)
         {
+            // 验证请求参数是否合法
+            if (!ModelState.IsValid)
+            {
+                // 收集所有验证错误信息
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                // 返回400错误和错误信息
+                return Ok(ApiResponse<long>.Fail(400, string.Join(", ", errors)));
+            }
+            
             try
             {
+                // 调用摄像头服务强行绑定摄像头
                 var mappingId = await _cameraService.ForceBindCamerasAsync(request, cancellationToken);
+                // 返回绑定成功的结果
                 return Ok(ApiResponse<long>.Ok(mappingId, "绑定成功"));
             }
             catch (System.ArgumentException ex)
             {
+                // 处理参数错误
                 return Ok(ApiResponse<long>.Fail(400, ex.Message));
             }
         }
@@ -174,15 +236,28 @@ namespace FaceRecoTrackService.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<FaceCameraResponse>), 200)]
         public async Task<IActionResult> UpdateFaceCamera([FromQuery] long? id, [FromQuery] string? ip, [FromBody] UpdateFaceCameraRequest request, CancellationToken cancellationToken)
         {
+            // 验证请求参数是否合法
+            if (!ModelState.IsValid)
+            {
+                // 收集所有验证错误信息
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                // 返回400错误和错误信息
+                return Ok(ApiResponse<FaceCameraResponse>.Fail(400, string.Join(", ", errors)));
+            }
+            
             try
             {
+                // 调用摄像头服务更新人脸摄像头信息
                 var result = await _cameraService.UpdateFaceCameraAsync(id, ip, request, cancellationToken);
+                // 检查是否找到摄像头
                 if (result == null)
                     return Ok(ApiResponse<FaceCameraResponse>.Fail(404, "未找到该人脸摄像头"));
+                // 返回更新成功的结果
                 return Ok(ApiResponse<FaceCameraResponse>.Ok(result, "修改成功"));
             }
             catch (System.ArgumentException ex)
             {
+                // 处理参数错误
                 return Ok(ApiResponse<FaceCameraResponse>.Fail(400, ex.Message));
             }
         }
@@ -192,15 +267,28 @@ namespace FaceRecoTrackService.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<RecordCameraResponse>), 200)]
         public async Task<IActionResult> UpdateRecordCamera([FromQuery] long? id, [FromQuery] string? ip, [FromBody] UpdateRecordCameraRequest request, CancellationToken cancellationToken)
         {
+            // 验证请求参数是否合法
+            if (!ModelState.IsValid)
+            {
+                // 收集所有验证错误信息
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                // 返回400错误和错误信息
+                return Ok(ApiResponse<RecordCameraResponse>.Fail(400, string.Join(", ", errors)));
+            }
+            
             try
             {
+                // 调用摄像头服务更新录像摄像头信息
                 var result = await _cameraService.UpdateRecordCameraAsync(id, ip, request, cancellationToken);
+                // 检查是否找到摄像头
                 if (result == null)
                     return Ok(ApiResponse<RecordCameraResponse>.Fail(404, "未找到该录像摄像头"));
+                // 返回更新成功的结果
                 return Ok(ApiResponse<RecordCameraResponse>.Ok(result, "修改成功"));
             }
             catch (System.ArgumentException ex)
             {
+                // 处理参数错误
                 return Ok(ApiResponse<RecordCameraResponse>.Fail(400, ex.Message));
             }
         }

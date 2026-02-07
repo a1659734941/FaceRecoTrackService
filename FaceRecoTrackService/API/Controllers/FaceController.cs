@@ -48,17 +48,30 @@ namespace FaceRecoTrackService.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<FaceRegisterResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Register([FromBody] FaceRegisterRequest request, CancellationToken cancellationToken)
         {
+            // 验证请求参数是否合法
+            if (!ModelState.IsValid)
+            {
+                // 收集所有验证错误信息
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                // 返回400错误和错误信息
+                return Ok(ApiResponse<FaceRegisterResponse>.Fail(400, string.Join(", ", errors)));
+            }
+            
             try
             {
+                // 调用注册服务进行人脸注册
                 var result = await _registrationService.RegisterAsync(request, cancellationToken);
+                // 返回注册成功的结果
                 return Ok(ApiResponse<FaceRegisterResponse>.Ok(result, "注册成功"));
             }
             catch (ArgumentException ex)
             {
+                // 处理参数错误
                 return Ok(ApiResponse<FaceRegisterResponse>.Fail(400, ex.Message));
             }
             catch (Exception ex)
             {
+                // 处理其他错误
                 return Ok(ApiResponse<FaceRegisterResponse>.Fail(400, $"注册失败：{ex.Message}"));
             }
         }
@@ -162,17 +175,30 @@ namespace FaceRecoTrackService.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<FaceCompareResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Compare([FromBody] FaceCompareRequest request, CancellationToken cancellationToken)
         {
+            // 验证请求参数是否合法
+            if (!ModelState.IsValid)
+            {
+                // 收集所有验证错误信息
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                // 返回400错误和错误信息
+                return Ok(ApiResponse<FaceCompareResponse>.Fail(400, string.Join(", ", errors)));
+            }
+            
             try
             {
+                // 调用验证服务进行人脸对比
                 var result = await _verificationService.CompareAsync(request, cancellationToken);
+                // 返回对比结果
                 return Ok(ApiResponse<FaceCompareResponse>.Ok(result, "对比完成"));
             }
             catch (ArgumentException ex)
             {
+                // 处理参数错误
                 return Ok(ApiResponse<FaceCompareResponse>.Fail(400, ex.Message));
             }
             catch (Exception ex)
             {
+                // 处理其他错误
                 return Ok(ApiResponse<FaceCompareResponse>.Fail(400, $"对比失败：{ex.Message}"));
             }
         }
@@ -184,17 +210,30 @@ namespace FaceRecoTrackService.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<FaceCheckResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Check([FromBody] FaceCheckRequest request, CancellationToken cancellationToken)
         {
+            // 验证请求参数是否合法
+            if (!ModelState.IsValid)
+            {
+                // 收集所有验证错误信息
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                // 返回400错误和错误信息
+                return Ok(ApiResponse<FaceCheckResponse>.Fail(400, string.Join(", ", errors)));
+            }
+            
             try
             {
+                // 调用验证服务进行人脸合规检测
                 var result = await _verificationService.CheckAsync(request, cancellationToken);
+                // 返回检测结果
                 return Ok(ApiResponse<FaceCheckResponse>.Ok(result, "检测完成"));
             }
             catch (ArgumentException ex)
             {
+                // 处理参数错误
                 return Ok(ApiResponse<FaceCheckResponse>.Fail(400, ex.Message));
             }
             catch (Exception ex)
             {
+                // 处理其他错误
                 return Ok(ApiResponse<FaceCheckResponse>.Fail(400, $"检测失败：{ex.Message}"));
             }
         }
