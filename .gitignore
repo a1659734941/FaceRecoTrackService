@@ -729,3 +729,6 @@ FaceRecoTrackService/bin/Debug/net8.0/win-x64/res/model/ArcFace.optimized.onnx
 FaceRecoTrackService/bin/Debug/net8.0/win-x64/res/model/ArcFace.optimized.onnx
 FaceRecoTrackService/bin/Release/net8.0/win-x64/Microsoft.Extensions.Hosting.WindowsServices.dll
 FaceRecoTrackService/bin/Release/net8.0/win-x64/System.ServiceProcess.ServiceController.dll
+FaceRecoTrackService/bin/Debug/net8.0/win-x64/Microsoft.Extensions.Hosting.WindowsServices.dll
+FaceRecoTrackService/bin/Debug/net8.0/win-x64/System.ServiceProcess.ServiceController.dll
+FaceRecoTrackService/bin/Debug/net8.0/win-x64/logs/2026/02/FaceTrackService-20260208.log

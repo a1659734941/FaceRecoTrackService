@@ -292,5 +292,54 @@ namespace FaceRecoTrackService.API.Controllers
                 return Ok(ApiResponse<RecordCameraResponse>.Fail(400, ex.Message));
             }
         }
+
+        /// <summary>解绑指定的一对人脸和录像摄像头</summary>
+        [HttpDelete("unbindPair")]
+        [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+        public async Task<IActionResult> UnbindSpecificPair([FromQuery] long faceCameraId, [FromQuery] long recordCameraId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var ok = await _cameraService.UnbindSpecificPairAsync(faceCameraId, recordCameraId, cancellationToken);
+                return Ok(ApiResponse<bool>.Ok(ok, ok ? "解绑成功" : "未找到绑定关系"));
+            }
+            catch (System.ArgumentException ex)
+            {
+
+                return Ok(ApiResponse<bool>.Fail(400, ex.Message));
+            }
+        }
+
+        /// <summary>解绑一个人脸摄像头绑定的所有录像摄像头</summary>
+        [HttpDelete("unbindAllFromFace/{faceCameraId:long}")]
+        [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+        public async Task<IActionResult> UnbindAllFromFaceCamera(long faceCameraId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var ok = await _cameraService.UnbindAllFromFaceCameraAsync(faceCameraId, cancellationToken);
+                return Ok(ApiResponse<bool>.Ok(ok, ok ? "解绑成功" : "未找到绑定关系"));
+            }
+            catch (System.ArgumentException ex)
+            {
+                return Ok(ApiResponse<bool>.Fail(400, ex.Message));
+            }
+        }
+
+        /// <summary>解绑一个录像摄像头绑定的所有人脸摄像头</summary>
+        [HttpDelete("unbindAllFromRecord/{recordCameraId:long}")]
+        [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+        public async Task<IActionResult> UnbindAllFromRecordCamera(long recordCameraId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var ok = await _cameraService.UnbindAllFromRecordCameraAsync(recordCameraId, cancellationToken);
+                return Ok(ApiResponse<bool>.Ok(ok, ok ? "解绑成功" : "未找到绑定关系"));
+            }
+            catch (System.ArgumentException ex)
+            {
+                return Ok(ApiResponse<bool>.Fail(400, ex.Message));
+            }
+        }
     }
 }

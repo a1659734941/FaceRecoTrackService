@@ -177,6 +177,27 @@ RETURNING id;";
             return await cmd.ExecuteNonQueryAsync(cancellationToken) > 0;
         }
 
+        public async Task<bool> UnbindByRecordCameraIdAsync(long recordCameraId, CancellationToken cancellationToken)
+        {
+            const string sql = "DELETE FROM camera_mapping WHERE record_camera_id = @record_camera_id;";
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync(cancellationToken);
+            await using var cmd = new NpgsqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("record_camera_id", recordCameraId);
+            return await cmd.ExecuteNonQueryAsync(cancellationToken) > 0;
+        }
+
+        public async Task<bool> UnbindByFaceAndRecordCameraIdAsync(long faceCameraId, long recordCameraId, CancellationToken cancellationToken)
+        {
+            const string sql = "DELETE FROM camera_mapping WHERE face_camera_id = @face_camera_id AND record_camera_id = @record_camera_id;";
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync(cancellationToken);
+            await using var cmd = new NpgsqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("face_camera_id", faceCameraId);
+            cmd.Parameters.AddWithValue("record_camera_id", recordCameraId);
+            return await cmd.ExecuteNonQueryAsync(cancellationToken) > 0;
+        }
+
         public async Task<bool> UpdateRecordCameraIdAsync(long mappingId, long newRecordCameraId, CancellationToken cancellationToken)
         {
             const string sql = "UPDATE camera_mapping SET record_camera_id = @record_camera_id WHERE id = @id;";

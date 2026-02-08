@@ -132,6 +132,39 @@ namespace FaceRecoTrackService.Services
             return id;
         }
 
+        /// <summary>解绑指定的一对人脸和录像摄像头</summary>
+        public async Task<bool> UnbindSpecificPairAsync(long faceCameraId, long recordCameraId, CancellationToken cancellationToken)
+        {
+            var face = await _faceRepo.GetByIdAsync(faceCameraId, cancellationToken);
+            if (face == null)
+                throw new ArgumentException("人脸摄像头不存在");
+            var record = await _recordRepo.GetByIdAsync(recordCameraId, cancellationToken);
+            if (record == null)
+                throw new ArgumentException("录像摄像头不存在");
+
+            return await _mappingRepo.UnbindByFaceAndRecordCameraIdAsync(faceCameraId, recordCameraId, cancellationToken);
+        }
+
+        /// <summary>解绑一个人脸摄像头绑定的所有录像摄像头</summary>
+        public async Task<bool> UnbindAllFromFaceCameraAsync(long faceCameraId, CancellationToken cancellationToken)
+        {
+            var face = await _faceRepo.GetByIdAsync(faceCameraId, cancellationToken);
+            if (face == null)
+                throw new ArgumentException("人脸摄像头不存在");
+
+            return await _mappingRepo.UnbindByFaceCameraIdAsync(faceCameraId, cancellationToken);
+        }
+
+        /// <summary>解绑一个录像摄像头绑定的所有人脸摄像头</summary>
+        public async Task<bool> UnbindAllFromRecordCameraAsync(long recordCameraId, CancellationToken cancellationToken)
+        {
+            var record = await _recordRepo.GetByIdAsync(recordCameraId, cancellationToken);
+            if (record == null)
+                throw new ArgumentException("录像摄像头不存在");
+
+            return await _mappingRepo.UnbindByRecordCameraIdAsync(recordCameraId, cancellationToken);
+        }
+
         public async Task<bool> DeleteFaceCameraAsync(long? id, string? ip, CancellationToken cancellationToken)
         {
             if (id.HasValue)
