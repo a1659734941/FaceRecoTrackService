@@ -167,20 +167,48 @@ namespace FaceRecoTrackService.Services
 
         public async Task<bool> DeleteFaceCameraAsync(long? id, string? ip, CancellationToken cancellationToken)
         {
+            FaceCamera? camera;
+            if (id.HasValue)
+                camera = await _faceRepo.GetByIdAsync(id.Value, cancellationToken);
+            else if (!string.IsNullOrWhiteSpace(ip))
+                camera = await _faceRepo.GetByIpAsync(ip.Trim(), cancellationToken);
+            else
+                throw new ArgumentException("请提供 id 或 ip");
+
+            if (camera == null)
+                return false;
+
+            // 先解绑该人脸摄像头的所有绑定关系
+            await _mappingRepo.UnbindByFaceCameraIdAsync(camera.Id, cancellationToken);
+
+            // 再删除摄像头
             if (id.HasValue)
                 return await _faceRepo.DeleteByIdAsync(id.Value, cancellationToken);
-            if (!string.IsNullOrWhiteSpace(ip))
-                return await _faceRepo.DeleteByIpAsync(ip.Trim(), cancellationToken);
-            throw new ArgumentException("请提供 id 或 ip");
+            else
+                return await _faceRepo.DeleteByIpAsync(ip!.Trim(), cancellationToken);
         }
 
         public async Task<bool> DeleteRecordCameraAsync(long? id, string? ip, CancellationToken cancellationToken)
         {
+            RecordCamera? camera;
+            if (id.HasValue)
+                camera = await _recordRepo.GetByIdAsync(id.Value, cancellationToken);
+            else if (!string.IsNullOrWhiteSpace(ip))
+                camera = await _recordRepo.GetByIpAsync(ip.Trim(), cancellationToken);
+            else
+                throw new ArgumentException("请提供 id 或 ip");
+
+            if (camera == null)
+                return false;
+
+            // 先解绑该录像摄像头的所有绑定关系
+            await _mappingRepo.UnbindByRecordCameraIdAsync(camera.Id, cancellationToken);
+
+            // 再删除摄像头
             if (id.HasValue)
                 return await _recordRepo.DeleteByIdAsync(id.Value, cancellationToken);
-            if (!string.IsNullOrWhiteSpace(ip))
-                return await _recordRepo.DeleteByIpAsync(ip.Trim(), cancellationToken);
-            throw new ArgumentException("请提供 id 或 ip");
+            else
+                return await _recordRepo.DeleteByIpAsync(ip!.Trim(), cancellationToken);
         }
 
         public async Task<FaceCameraResponse?> UpdateFaceCameraAsync(long? id, string? ip, UpdateFaceCameraRequest request, CancellationToken cancellationToken)
