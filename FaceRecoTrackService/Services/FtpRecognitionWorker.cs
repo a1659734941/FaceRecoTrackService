@@ -29,6 +29,13 @@ namespace FaceRecoTrackService.Services
         private readonly Dictionary<Guid, float[]> _faceVectorsCache = new Dictionary<Guid, float[]>();
         private DateTime _lastCacheUpdate = DateTime.MinValue;
         private const int CacheUpdateIntervalMs = 120000; // 2分钟更新一次缓存
+        
+        // 统计信息类
+        public class FaceStats
+        {
+            public int TotalFaces { get; set; } = 0;
+            public int BlurryFaces { get; set; } = 0;
+        }
 
         public FtpRecognitionWorker(
             IOptions<PipelineOptions> pipelineOptions,
@@ -75,9 +82,19 @@ namespace FaceRecoTrackService.Services
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     var snapshots = await _snapshotClient.FetchNewSnapshotsAsync(_ftpOptions, stoppingToken);
+                    int totalImages = snapshots.Count;
+                    int totalFaces = 0;
+                    int blurryFaces = 0;
+
                     foreach (var snapshot in snapshots)
                     {
                         await channel.Writer.WriteAsync(snapshot, stoppingToken);
+                    }
+
+                    if (totalImages > 0)
+                    {
+                        _logger.LogInformation("此轮处理{TotalImages}张图片，扫描到{TotalFaces}张人脸，有{BlurryFaces}张模糊或非人脸", 
+                            totalImages, totalFaces, blurryFaces);
                     }
 
                     await Task.Delay(_pipelineOptions.PollIntervalMs, stoppingToken);
@@ -139,36 +156,52 @@ namespace FaceRecoTrackService.Services
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "[{Camera}] 快照解析失败", snapshot.CameraName);
+                // 即使解析失败，也删除文件
+                if (_pipelineOptions.DeleteProcessedSnapshots)
+                {
+                    TryDeleteSnapshotFile(snapshot.FilePath);
+                }
                 return;
             }
 
             using (snapshotImage)
             {
-                var detections = faceDetector.DetectFaces(snapshotImage);
-                if (detections == null || detections.Count < _pipelineOptions.MinFaceCount)
-                    return;
-
-                var validFaces = faceDetector.CropAndFilterSharpFaces(snapshotImage, detections);
-                using var scope = _scopeFactory.CreateScope();
-                var trackRecordService = scope.ServiceProvider.GetRequiredService<TrackRecordService>();
-                var faceRepository = scope.ServiceProvider.GetRequiredService<PgFaceRepository>();
-                foreach (var faceImage in validFaces.Values)
+                try
                 {
-                    // 提取向量并进行相似度检索
-                    var match = await MatchFaceAsync(featureExtractor, faceRepository, faceImage, cancellationToken);
-                    if (match == null) continue;
+                    var detections = faceDetector.DetectFaces(snapshotImage);
+                    if (detections != null && detections.Count >= _pipelineOptions.MinFaceCount)
+                    {
+                        int totalFaces, blurryFaces;
+                    var validFaces = faceDetector.CropAndFilterSharpFaces(snapshotImage, detections, out totalFaces, out blurryFaces);
+                        using var scope = _scopeFactory.CreateScope();
+                        var trackRecordService = scope.ServiceProvider.GetRequiredService<TrackRecordService>();
+                        var faceRepository = scope.ServiceProvider.GetRequiredService<PgFaceRepository>();
+                        foreach (var faceImage in validFaces.Values)
+                        {
+                            // 提取向量并进行相似度检索
+                            var match = await MatchFaceAsync(featureExtractor, faceRepository, faceImage, cancellationToken);
+                            if (match == null) continue;
 
-                    await trackRecordService.HandleTrackAsync(
-                        match.PersonId,
-                        snapshot.CameraIp,
-                        snapshot.CaptureTimeUtc,
-                        snapshot.Location,
-                        cancellationToken);
+                            await trackRecordService.HandleTrackAsync(
+                                match.PersonId,
+                                snapshot.CameraIp,
+                                snapshot.CaptureTimeUtc,
+                                snapshot.Location,
+                                cancellationToken);
+                        }
+                    }
                 }
-
-                if (_pipelineOptions.DeleteProcessedSnapshots)
+                catch (Exception ex)
                 {
-                    TryDeleteSnapshotFile(snapshot.FilePath);
+                    _logger.LogError(ex, "处理快照时发生异常");
+                }
+                finally
+                {
+                    // 无论处理结果如何，都删除文件
+                    if (_pipelineOptions.DeleteProcessedSnapshots)
+                    {
+                        TryDeleteSnapshotFile(snapshot.FilePath);
+                    }
                 }
             }
         }

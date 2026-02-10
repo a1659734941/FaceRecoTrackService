@@ -85,36 +85,55 @@ namespace FaceRecoTrackService.Core.Algorithms
         /// </summary>
         public List<ObjectDetection> DetectFaces(SKImage image)
         {
-            if (image == null) throw new ArgumentNullException(nameof(image));
-            using var mat = ToMat(image);
-            if (mat.IsEmpty)
-                throw new InvalidOperationException("图像解析失败：OpenCV Mat 为空");
-            using var blob = DnnInvoke.BlobFromImage(
-                mat,
-                1.0 / 255.0,
-                _inputSize,
-                new MCvScalar(),
-                swapRB: true,
-                crop: false);
-            _net.SetInput(blob);
-
-            using var outputs = new VectorOfMat();
-            _net.Forward(outputs, _net.UnconnectedOutLayersNames);
-            if (outputs.Size == 0)
+            if (image == null)
+            {
+                Log.Warning("输入图像为空，跳过检测");
                 return new List<ObjectDetection>();
-            if (outputs[0] == null || outputs[0].IsEmpty)
-                return new List<ObjectDetection>();
+            }
 
-            var detections = ParseDetections(outputs[0], mat.Size, _inputSize, _config.DetectionConfidence);
-            return ApplyNms(detections, _config.DetectionConfidence, _config.IouThreshold);
+            try
+            {
+                using var mat = ToMat(image);
+                if (mat.IsEmpty)
+                {
+                    Log.Warning("图像解析失败：OpenCV Mat 为空");
+                    return new List<ObjectDetection>();
+                }
+
+                using var blob = DnnInvoke.BlobFromImage(
+                    mat,
+                    1.0 / 255.0,
+                    _inputSize,
+                    new MCvScalar(),
+                    swapRB: true,
+                    crop: false);
+                _net.SetInput(blob);
+
+                using var outputs = new VectorOfMat();
+                _net.Forward(outputs, _net.UnconnectedOutLayersNames);
+                if (outputs.Size == 0)
+                    return new List<ObjectDetection>();
+                if (outputs[0] == null || outputs[0].IsEmpty)
+                    return new List<ObjectDetection>();
+
+                var detections = ParseDetections(outputs[0], mat.Size, _inputSize, _config.DetectionConfidence);
+                return ApplyNms(detections, _config.DetectionConfidence, _config.IouThreshold);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "人脸检测失败");
+                return new List<ObjectDetection>();
+            }
         }
 
         /// <summary>
         /// 裁剪并筛选清晰的人脸
         /// </summary>
-        public Dictionary<int, SKImage> CropAndFilterSharpFaces(SKImage originalImage, List<ObjectDetection> detectionResults)
+        public Dictionary<int, SKImage> CropAndFilterSharpFaces(SKImage originalImage, List<ObjectDetection> detectionResults, out int totalFaces, out int blurryFaces)
         {
             var validFaces = new Dictionary<int, SKImage>();
+            totalFaces = detectionResults.Count;
+            blurryFaces = 0;
 
             for (int i = 0; i < detectionResults.Count; i++)
             {
@@ -124,13 +143,13 @@ namespace FaceRecoTrackService.Core.Algorithms
 
                 if (croppedFace == null)
                 {
-                    Log.Warning("人脸 {Index} 裁剪失败，跳过", i);
+                    blurryFaces++;
                     continue;
                 }
 
                 if (!SharpnessEvaluator.IsSharp(croppedFace, width, height, _config))
                 {
-                    Log.Warning("人脸 {Index} 模糊，跳过", i);
+                    blurryFaces++;
                     continue;
                 }
 
@@ -138,6 +157,11 @@ namespace FaceRecoTrackService.Core.Algorithms
             }
 
             return validFaces;
+        }
+
+        public Dictionary<int, SKImage> CropAndFilterSharpFaces(SKImage originalImage, List<ObjectDetection> detectionResults)
+        {
+            return CropAndFilterSharpFaces(originalImage, detectionResults, out _, out _);
         }
 
         /// <summary>
