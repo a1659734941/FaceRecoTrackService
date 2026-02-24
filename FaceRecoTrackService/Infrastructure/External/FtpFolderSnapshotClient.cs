@@ -47,11 +47,53 @@ namespace FaceRecoTrackService.Infrastructure.External
                 files.AddRange(Directory.EnumerateFiles(options.Path, pattern, searchOption));
             }
 
-            foreach (var file in files.OrderBy(f => File.GetLastWriteTimeUtc(f)))
+            // 按时间排序
+            files = files.OrderBy(f => File.GetLastWriteTimeUtc(f)).ToList();
+
+            // 限制初始批次的图片数量，避免一次性处理过多
+            int maxBatchSize = 20; // 每次最多处理20张图片
+            if (files.Count > maxBatchSize)
+            {
+                Log.Information("检测到{TotalFiles}张图片，限制本批次处理{MaxBatchSize}张", files.Count, maxBatchSize);
+                files = files.Take(maxBatchSize).ToList();
+            }
+
+            foreach (var file in files)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                
+                // 检查文件是否存在，避免竞态条件
+                if (!File.Exists(file))
+                {
+                    Log.Warning("文件已不存在，跳过处理: {FilePath}", file);
+                    continue;
+                }
+                
                 var lastWriteUtc = File.GetLastWriteTimeUtc(file);
-                var length = new FileInfo(file).Length;
+                
+                // 再次检查文件是否存在
+                if (!File.Exists(file))
+                {
+                    Log.Warning("文件已不存在，跳过处理: {FilePath}", file);
+                    continue;
+                }
+                
+                long length;
+                try
+                {
+                    length = new FileInfo(file).Length;
+                }
+                catch (FileNotFoundException)
+                {
+                    Log.Warning("文件已不存在，跳过处理: {FilePath}", file);
+                    continue;
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "获取文件信息失败，跳过处理: {FilePath}", file);
+                    continue;
+                }
+                
                 if (_processed.TryGetValue(file, out var meta) &&
                     meta.LastWriteUtc == lastWriteUtc &&
                     meta.Length == length)
@@ -59,8 +101,29 @@ namespace FaceRecoTrackService.Infrastructure.External
                     continue;
                 }
 
+                // 检查文件大小，避免处理过大的文件
+                if (length > 10 * 1024 * 1024) // 超过10MB的文件跳过
+                {
+                    Log.Warning("文件过大，跳过处理: {FilePath} ({FileSize}MB)", file, length / (1024 * 1024));
+                    _processed[file] = (lastWriteUtc, length);
+                    continue;
+                }
+
+                // 再次检查文件是否存在，避免竞态条件
+                if (!File.Exists(file))
+                {
+                    Log.Warning("文件已不存在，跳过处理: {FilePath}", file);
+                    _processed[file] = (lastWriteUtc, length);
+                    continue;
+                }
+
                 var bytes = await TryReadAllBytesWithRetryAsync(file, cancellationToken);
-                if (bytes == null || bytes.Length == 0) continue;
+                if (bytes == null || bytes.Length == 0)
+                {
+                    Log.Warning("文件读取失败，跳过处理: {FilePath}", file);
+                    _processed[file] = (lastWriteUtc, length);
+                    continue;
+                }
 
                 var fileMeta = ParseMetaFromFileName(file, options);
                 results.Add(new FolderSnapshotResult
@@ -96,12 +159,30 @@ namespace FaceRecoTrackService.Infrastructure.External
             const int maxRetry = 3;
             for (int i = 0; i < maxRetry; i++)
             {
+                // 检查文件是否存在
+                if (!File.Exists(filePath))
+                {
+                    Log.Warning("文件在读取过程中被删除: {FilePath}", filePath);
+                    return null;
+                }
+
                 try
                 {
                     return await File.ReadAllBytesAsync(filePath, cancellationToken);
                 }
+                catch (FileNotFoundException)
+                {
+                    Log.Warning("文件不存在: {FilePath}", filePath);
+                    return null;
+                }
                 catch (IOException)
                 {
+                    // 检查是否是因为文件不存在导致的异常
+                    if (!File.Exists(filePath))
+                    {
+                        Log.Warning("文件在读取过程中被删除: {FilePath}", filePath);
+                        return null;
+                    }
                     await Task.Delay(200, cancellationToken);
                 }
                 catch (UnauthorizedAccessException)

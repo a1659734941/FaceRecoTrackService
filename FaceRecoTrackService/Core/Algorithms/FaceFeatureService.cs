@@ -25,8 +25,8 @@ namespace FaceRecoTrackService.Core.Algorithms
         private readonly string _inputName;
         private bool _disposed;
 
-        private static readonly Dictionary<string, FaceFeatureService> _instanceCache = new Dictionary<string, FaceFeatureService>();
-        private static readonly object _lock = new object();
+        private static readonly ThreadLocal<Dictionary<string, FaceFeatureService>> _threadLocalInstances = 
+            new ThreadLocal<Dictionary<string, FaceFeatureService>>(() => new Dictionary<string, FaceFeatureService>());
 
         private FaceFeatureService(FaceRecognitionOptions options)
         {
@@ -36,18 +36,17 @@ namespace FaceRecoTrackService.Core.Algorithms
 
             var sessionOptions = new Microsoft.ML.OnnxRuntime.SessionOptions();
             
-            // Set graph optimization level to avoid hardware-specific optimizations
-            sessionOptions.GraphOptimizationLevel = Microsoft.ML.OnnxRuntime.GraphOptimizationLevel.ORT_ENABLE_EXTENDED;
+            // Set conservative graph optimization level to avoid compatibility issues
+            sessionOptions.GraphOptimizationLevel = Microsoft.ML.OnnxRuntime.GraphOptimizationLevel.ORT_ENABLE_BASIC;
             
-            // Set thread counts for better performance
-            int intraOpThreads = options.OnnxIntraOpNumThreads > 0 ? options.OnnxIntraOpNumThreads : Environment.ProcessorCount;
-            int interOpThreads = options.OnnxInterOpNumThreads > 0 ? options.OnnxInterOpNumThreads : Math.Max(1, Environment.ProcessorCount / 2);
-            sessionOptions.IntraOpNumThreads = intraOpThreads;
-            sessionOptions.InterOpNumThreads = interOpThreads;
+            // Set conservative thread counts to avoid resource competition
+            sessionOptions.IntraOpNumThreads = 4;
+            sessionOptions.InterOpNumThreads = 2;
             
             // Enable memory optimization
             sessionOptions.EnableMemoryPattern = true;
-            sessionOptions.OptimizedModelFilePath = Path.Combine(Path.GetDirectoryName(options.FaceNetModelPath) ?? string.Empty, $"{Path.GetFileNameWithoutExtension(options.FaceNetModelPath)}.optimized.onnx");
+            // Disable optimized model file to avoid compatibility issues
+            // sessionOptions.OptimizedModelFilePath = Path.Combine(Path.GetDirectoryName(options.FaceNetModelPath) ?? string.Empty, $"{Path.GetFileNameWithoutExtension(options.FaceNetModelPath)}.optimized.onnx");
             
             // Try to enable CUDA if available (commented out for now, can be enabled if GPU is available)
             // try
@@ -59,11 +58,46 @@ namespace FaceRecoTrackService.Core.Algorithms
             //     // CUDA not available, fall back to CPU
             // }
 
-            _onnxSession = new InferenceSession(options.FaceNetModelPath, sessionOptions);
-            _config = options;
-            _inputWidth = Math.Max(1, options.FeatureInputWidth);
-            _inputHeight = Math.Max(1, options.FeatureInputHeight);
-            _inputName = _onnxSession.InputMetadata.Keys.FirstOrDefault() ?? "input";
+            try
+            {
+                // Ensure model path exists and is accessible
+                if (!File.Exists(options.FaceNetModelPath))
+                {
+                    // Try case-insensitive path resolution
+                    string directory = Path.GetDirectoryName(options.FaceNetModelPath) ?? string.Empty;
+                    string fileName = Path.GetFileName(options.FaceNetModelPath);
+                    if (!string.IsNullOrEmpty(directory) && !string.IsNullOrEmpty(fileName))
+                    {
+                        var files = Directory.GetFiles(directory, "*", SearchOption.TopDirectoryOnly);
+                        var matchingFile = files.FirstOrDefault(f => string.Equals(Path.GetFileName(f), fileName, StringComparison.OrdinalIgnoreCase));
+                        if (matchingFile != null)
+                        {
+                            _onnxSession = new InferenceSession(matchingFile, sessionOptions);
+                        }
+                        else
+                        {
+                            throw new FileNotFoundException($"模型文件不存在: {options.FaceNetModelPath}", options.FaceNetModelPath);
+                        }
+                    }
+                    else
+                    {
+                        throw new FileNotFoundException($"模型文件不存在: {options.FaceNetModelPath}", options.FaceNetModelPath);
+                    }
+                }
+                else
+                {
+                    _onnxSession = new InferenceSession(options.FaceNetModelPath, sessionOptions);
+                }
+                
+                _config = options;
+                _inputWidth = Math.Max(1, options.FeatureInputWidth);
+                _inputHeight = Math.Max(1, options.FeatureInputHeight);
+                _inputName = _onnxSession.InputMetadata.Keys.FirstOrDefault() ?? "input";
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"初始化人脸特征提取模型失败: {ex.Message}", ex);
+            }
         }
 
         public static FaceFeatureService GetInstance(FaceRecognitionOptions options)
@@ -73,15 +107,18 @@ namespace FaceRecoTrackService.Core.Algorithms
                 throw new ArgumentNullException(nameof(options.FaceNetModelPath), "模型路径不能为空");
 
             string key = options.FaceNetModelPath;
-            lock (_lock)
+            var instances = _threadLocalInstances.Value;
+            FaceFeatureService instance;
+            if (instances != null && instances.TryGetValue(key, out instance))
             {
-                if (!_instanceCache.TryGetValue(key, out var instance))
-                {
-                    instance = new FaceFeatureService(options);
-                    _instanceCache[key] = instance;
-                }
                 return instance;
             }
+            instance = new FaceFeatureService(options);
+            if (instances != null)
+            {
+                instances[key] = instance;
+            }
+            return instance;
         }
 
         /// <summary>

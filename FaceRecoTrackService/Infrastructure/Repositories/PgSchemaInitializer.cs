@@ -42,7 +42,6 @@ namespace FaceRecoTrackService.Infrastructure.Repositories
                         using (var createDbConn = new Npgsql.NpgsqlConnection(createDbBuilder.ToString()))
                         {
                             await createDbConn.OpenAsync(cancellationToken);
-                            const string createDbSql = "CREATE DATABASE @databaseName";
                             using (var createCmd = new Npgsql.NpgsqlCommand())
                             {
                                 createCmd.Connection = createDbConn;

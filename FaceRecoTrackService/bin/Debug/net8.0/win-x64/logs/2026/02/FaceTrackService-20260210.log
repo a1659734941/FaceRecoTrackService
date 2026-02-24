@@ -11,3 +11,265 @@
 2026-02-10 13:04:54.042 +08:00 [INF] 模型预加载完成
 2026-02-10 13:04:54.063 +08:00 [INF] Qdrant已在 127.0.0.1:6334 运行，跳过内置启动。
 2026-02-10 13:04:55.366 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-10 16:26:58.176 +08:00 [INF] === 硬件配置信息 ===
+2026-02-10 16:26:58.211 +08:00 [INF] CPU核心数: 20
+2026-02-10 16:26:58.212 +08:00 [INF] 进程ID: 11612
+2026-02-10 16:26:58.230 +08:00 [INF] 进程内存使用: 49 MB
+2026-02-10 16:26:58.231 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-10 16:26:58.326 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-10 16:26:58.327 +08:00 [INF] ==================
+2026-02-10 16:26:58.330 +08:00 [INF] 开始预加载模型...
+2026-02-10 16:26:58.569 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-10 16:26:58.907 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-10 16:26:58.909 +08:00 [INF] 模型预加载完成
+2026-02-10 16:26:58.921 +08:00 [INF] Qdrant已在 127.0.0.1:6334 运行，跳过内置启动。
+2026-02-10 16:26:59.544 +08:00 [INF] 预加载人脸检测和特征提取模型...
+2026-02-10 16:26:59.907 +08:00 [INF] 模型加载完成，开始处理任务...
+2026-02-10 16:26:59.908 +08:00 [INF] 系统启动中，等待2秒后开始处理任务...
+2026-02-10 16:27:01.912 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-10 16:27:01.928 +08:00 [INF] 此轮处理2张图片，扫描到0张人脸，有0张模糊或非人脸
+2026-02-10 16:27:36.563 +08:00 [ERR] BackgroundService failed
+System.Collections.Generic.KeyNotFoundException: The given key '13' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Microsoft.ML.OnnxRuntime.OnnxRuntimeException..ctor(ErrorCode errorCode, String message)
+   at Microsoft.ML.OnnxRuntime.InferenceSession.Init(String modelPath, SessionOptions options, PrePackedWeightsContainer prepackedWeightsContainer)
+   at Microsoft.ML.OnnxRuntime.InferenceSession..ctor(String modelPath, SessionOptions options)
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService..ctor(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 62
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService.GetInstance(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 78
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.WorkerLoopAsync(ChannelReader`1 reader, CancellationToken cancellationToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 133
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.ExecuteAsync(CancellationToken stoppingToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 124
+   at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)
+2026-02-10 16:27:36.581 +08:00 [FTL] The HostOptions.BackgroundServiceExceptionBehavior is configured to StopHost. A BackgroundService has thrown an unhandled exception, and the IHost instance is stopping. To avoid this behavior, configure this to Ignore; however the BackgroundService will not be restarted.
+System.Collections.Generic.KeyNotFoundException: The given key '13' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Microsoft.ML.OnnxRuntime.OnnxRuntimeException..ctor(ErrorCode errorCode, String message)
+   at Microsoft.ML.OnnxRuntime.InferenceSession.Init(String modelPath, SessionOptions options, PrePackedWeightsContainer prepackedWeightsContainer)
+   at Microsoft.ML.OnnxRuntime.InferenceSession..ctor(String modelPath, SessionOptions options)
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService..ctor(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 62
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService.GetInstance(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 78
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.WorkerLoopAsync(ChannelReader`1 reader, CancellationToken cancellationToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 133
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.ExecuteAsync(CancellationToken stoppingToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 124
+   at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)
+2026-02-10 16:27:38.638 +08:00 [INF] === 硬件配置信息 ===
+2026-02-10 16:27:38.656 +08:00 [INF] CPU核心数: 20
+2026-02-10 16:27:38.656 +08:00 [INF] 进程ID: 41540
+2026-02-10 16:27:38.673 +08:00 [INF] 进程内存使用: 49 MB
+2026-02-10 16:27:38.674 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-10 16:27:38.725 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-10 16:27:38.726 +08:00 [INF] ==================
+2026-02-10 16:27:38.728 +08:00 [INF] 开始预加载模型...
+2026-02-10 16:27:38.899 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-10 16:27:39.133 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-10 16:27:39.134 +08:00 [INF] 模型预加载完成
+2026-02-10 16:27:39.143 +08:00 [INF] Qdrant已在 127.0.0.1:6334 运行，跳过内置启动。
+2026-02-10 16:27:39.543 +08:00 [INF] 预加载人脸检测和特征提取模型...
+2026-02-10 16:27:39.848 +08:00 [INF] 模型加载完成，开始处理任务...
+2026-02-10 16:27:39.849 +08:00 [INF] 系统启动中，等待2秒后开始处理任务...
+2026-02-10 16:27:41.854 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-10 16:27:41.865 +08:00 [INF] 此轮处理2张图片，扫描到0张人脸，有0张模糊或非人脸
+2026-02-10 16:27:48.150 +08:00 [ERR] BackgroundService failed
+System.Collections.Generic.KeyNotFoundException: The given key '13' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Microsoft.ML.OnnxRuntime.OnnxRuntimeException..ctor(ErrorCode errorCode, String message)
+   at Microsoft.ML.OnnxRuntime.InferenceSession.Init(String modelPath, SessionOptions options, PrePackedWeightsContainer prepackedWeightsContainer)
+   at Microsoft.ML.OnnxRuntime.InferenceSession..ctor(String modelPath, SessionOptions options)
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService..ctor(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 62
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService.GetInstance(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 78
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.WorkerLoopAsync(ChannelReader`1 reader, CancellationToken cancellationToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 133
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.ExecuteAsync(CancellationToken stoppingToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 124
+   at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)
+2026-02-10 16:27:48.158 +08:00 [FTL] The HostOptions.BackgroundServiceExceptionBehavior is configured to StopHost. A BackgroundService has thrown an unhandled exception, and the IHost instance is stopping. To avoid this behavior, configure this to Ignore; however the BackgroundService will not be restarted.
+System.Collections.Generic.KeyNotFoundException: The given key '13' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Microsoft.ML.OnnxRuntime.OnnxRuntimeException..ctor(ErrorCode errorCode, String message)
+   at Microsoft.ML.OnnxRuntime.InferenceSession.Init(String modelPath, SessionOptions options, PrePackedWeightsContainer prepackedWeightsContainer)
+   at Microsoft.ML.OnnxRuntime.InferenceSession..ctor(String modelPath, SessionOptions options)
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService..ctor(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 62
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService.GetInstance(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 78
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.WorkerLoopAsync(ChannelReader`1 reader, CancellationToken cancellationToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 133
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.ExecuteAsync(CancellationToken stoppingToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 124
+   at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)
+2026-02-10 16:28:36.368 +08:00 [INF] === 硬件配置信息 ===
+2026-02-10 16:28:36.386 +08:00 [INF] CPU核心数: 20
+2026-02-10 16:28:36.387 +08:00 [INF] 进程ID: 51060
+2026-02-10 16:28:36.405 +08:00 [INF] 进程内存使用: 49 MB
+2026-02-10 16:28:36.406 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-10 16:28:36.452 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-10 16:28:36.453 +08:00 [INF] ==================
+2026-02-10 16:28:36.455 +08:00 [INF] 开始预加载模型...
+2026-02-10 16:28:36.631 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-10 16:28:36.888 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-10 16:28:36.889 +08:00 [INF] 模型预加载完成
+2026-02-10 16:28:36.898 +08:00 [INF] Qdrant已在 127.0.0.1:6334 运行，跳过内置启动。
+2026-02-10 16:28:37.264 +08:00 [INF] 预加载人脸检测和特征提取模型...
+2026-02-10 16:28:37.565 +08:00 [INF] 模型加载完成，开始处理任务...
+2026-02-10 16:28:37.566 +08:00 [INF] 系统启动中，等待2秒后开始处理任务...
+2026-02-10 16:28:39.568 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-10 16:28:39.577 +08:00 [INF] 此轮处理2张图片，扫描到0张人脸，有0张模糊或非人脸
+2026-02-10 16:29:33.921 +08:00 [ERR] BackgroundService failed
+System.Collections.Generic.KeyNotFoundException: The given key '13' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Microsoft.ML.OnnxRuntime.OnnxRuntimeException..ctor(ErrorCode errorCode, String message)
+   at Microsoft.ML.OnnxRuntime.InferenceSession.Init(String modelPath, SessionOptions options, PrePackedWeightsContainer prepackedWeightsContainer)
+   at Microsoft.ML.OnnxRuntime.InferenceSession..ctor(String modelPath, SessionOptions options)
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService..ctor(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 62
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService.GetInstance(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 78
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.WorkerLoopAsync(ChannelReader`1 reader, CancellationToken cancellationToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 133
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.ExecuteAsync(CancellationToken stoppingToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 124
+   at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)
+2026-02-10 16:29:33.936 +08:00 [FTL] The HostOptions.BackgroundServiceExceptionBehavior is configured to StopHost. A BackgroundService has thrown an unhandled exception, and the IHost instance is stopping. To avoid this behavior, configure this to Ignore; however the BackgroundService will not be restarted.
+System.Collections.Generic.KeyNotFoundException: The given key '13' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Microsoft.ML.OnnxRuntime.OnnxRuntimeException..ctor(ErrorCode errorCode, String message)
+   at Microsoft.ML.OnnxRuntime.InferenceSession.Init(String modelPath, SessionOptions options, PrePackedWeightsContainer prepackedWeightsContainer)
+   at Microsoft.ML.OnnxRuntime.InferenceSession..ctor(String modelPath, SessionOptions options)
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService..ctor(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 62
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService.GetInstance(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 78
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.WorkerLoopAsync(ChannelReader`1 reader, CancellationToken cancellationToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 133
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.ExecuteAsync(CancellationToken stoppingToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 124
+   at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)
+2026-02-10 16:29:36.970 +08:00 [INF] === 硬件配置信息 ===
+2026-02-10 16:29:36.989 +08:00 [INF] CPU核心数: 20
+2026-02-10 16:29:36.990 +08:00 [INF] 进程ID: 26608
+2026-02-10 16:29:37.009 +08:00 [INF] 进程内存使用: 49 MB
+2026-02-10 16:29:37.010 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-10 16:29:37.061 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-10 16:29:37.062 +08:00 [INF] ==================
+2026-02-10 16:29:37.064 +08:00 [INF] 开始预加载模型...
+2026-02-10 16:29:37.245 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-10 16:29:37.501 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-10 16:29:37.502 +08:00 [INF] 模型预加载完成
+2026-02-10 16:29:37.510 +08:00 [INF] Qdrant已在 127.0.0.1:6334 运行，跳过内置启动。
+2026-02-10 16:29:37.892 +08:00 [INF] 预加载人脸检测和特征提取模型...
+2026-02-10 16:29:38.201 +08:00 [INF] 模型加载完成，开始处理任务...
+2026-02-10 16:29:38.202 +08:00 [INF] 系统启动中，等待2秒后开始处理任务...
+2026-02-10 16:29:40.214 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-10 16:29:40.232 +08:00 [INF] 此轮处理2张图片，扫描到0张人脸，有0张模糊或非人脸
+2026-02-10 16:29:41.640 +08:00 [INF] 开始人脸检测，图像尺寸：86x86
+2026-02-10 16:29:41.649 +08:00 [INF] Mat创建成功，尺寸：86x86
+2026-02-10 16:29:41.657 +08:00 [INF] Blob创建成功，准备前向推理
+2026-02-10 16:29:41.933 +08:00 [INF] 前向推理成功，输出尺寸：{Width=-1, Height=-1}
+2026-02-10 16:29:41.937 +08:00 [INF] 解析检测结果，原始检测数：10
+2026-02-10 16:29:41.939 +08:00 [INF] 应用NMS后检测数：1
+2026-02-10 16:29:42.031 +08:00 [INF] 开始人脸检测，图像尺寸：1920x1080
+2026-02-10 16:29:42.276 +08:00 [INF] Mat创建成功，尺寸：1920x1080
+2026-02-10 16:29:42.279 +08:00 [INF] Blob创建成功，准备前向推理
+2026-02-10 16:29:42.511 +08:00 [INF] 前向推理成功，输出尺寸：{Width=-1, Height=-1}
+2026-02-10 16:29:42.513 +08:00 [INF] 解析检测结果，原始检测数：15
+2026-02-10 16:29:42.514 +08:00 [INF] 应用NMS后检测数：3
+2026-02-10 16:30:32.191 +08:00 [ERR] BackgroundService failed
+System.Collections.Generic.KeyNotFoundException: The given key '13' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Microsoft.ML.OnnxRuntime.OnnxRuntimeException..ctor(ErrorCode errorCode, String message)
+   at Microsoft.ML.OnnxRuntime.InferenceSession.Init(String modelPath, SessionOptions options, PrePackedWeightsContainer prepackedWeightsContainer)
+   at Microsoft.ML.OnnxRuntime.InferenceSession..ctor(String modelPath, SessionOptions options)
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService..ctor(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 62
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService.GetInstance(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 78
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.WorkerLoopAsync(ChannelReader`1 reader, CancellationToken cancellationToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 133
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.ExecuteAsync(CancellationToken stoppingToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 124
+   at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)
+2026-02-10 16:30:32.201 +08:00 [FTL] The HostOptions.BackgroundServiceExceptionBehavior is configured to StopHost. A BackgroundService has thrown an unhandled exception, and the IHost instance is stopping. To avoid this behavior, configure this to Ignore; however the BackgroundService will not be restarted.
+System.Collections.Generic.KeyNotFoundException: The given key '13' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Microsoft.ML.OnnxRuntime.OnnxRuntimeException..ctor(ErrorCode errorCode, String message)
+   at Microsoft.ML.OnnxRuntime.InferenceSession.Init(String modelPath, SessionOptions options, PrePackedWeightsContainer prepackedWeightsContainer)
+   at Microsoft.ML.OnnxRuntime.InferenceSession..ctor(String modelPath, SessionOptions options)
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService..ctor(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 62
+   at FaceRecoTrackService.Core.Algorithms.FaceFeatureService.GetInstance(FaceRecognitionOptions options) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Core\Algorithms\FaceFeatureService.cs:line 78
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.WorkerLoopAsync(ChannelReader`1 reader, CancellationToken cancellationToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 133
+   at FaceRecoTrackService.Services.FtpRecognitionWorker.ExecuteAsync(CancellationToken stoppingToken) in D:\work\work_space\YuanQi\GNXXA_FaZhi\FaceRecoTrackService\FaceRecoTrackService\Services\FtpRecognitionWorker.cs:line 124
+   at Microsoft.Extensions.Hosting.Internal.Host.TryExecuteBackgroundServiceAsync(BackgroundService backgroundService)
+2026-02-10 16:30:34.330 +08:00 [INF] === 硬件配置信息 ===
+2026-02-10 16:30:34.349 +08:00 [INF] CPU核心数: 20
+2026-02-10 16:30:34.350 +08:00 [INF] 进程ID: 50916
+2026-02-10 16:30:34.360 +08:00 [INF] 进程内存使用: 48 MB
+2026-02-10 16:30:34.360 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-10 16:30:34.410 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-10 16:30:34.410 +08:00 [INF] ==================
+2026-02-10 16:30:34.412 +08:00 [INF] 开始预加载模型...
+2026-02-10 16:30:34.587 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-10 16:30:34.835 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-10 16:30:34.836 +08:00 [INF] 模型预加载完成
+2026-02-10 16:30:34.845 +08:00 [INF] Qdrant已在 127.0.0.1:6334 运行，跳过内置启动。
+2026-02-10 16:30:35.214 +08:00 [INF] 预加载人脸检测和特征提取模型...
+2026-02-10 16:30:35.531 +08:00 [INF] 模型加载完成，开始处理任务...
+2026-02-10 16:30:35.531 +08:00 [INF] 系统启动中，等待2秒后开始处理任务...
+2026-02-10 16:30:37.543 +08:00 [INF] 开始监听FTP目录：res/ftp，轮询间隔：1000ms，工作线程：10，队列容量：500
+2026-02-10 16:30:37.557 +08:00 [INF] 此轮处理2张图片
+2026-02-10 16:30:38.798 +08:00 [INF] 开始人脸检测，图像尺寸：86x86
+2026-02-10 16:30:38.805 +08:00 [INF] Mat创建成功，尺寸：86x86
+2026-02-10 16:30:38.812 +08:00 [INF] Blob创建成功，准备前向推理
+2026-02-10 16:30:39.060 +08:00 [INF] 前向推理成功，输出尺寸：{Width=-1, Height=-1}
+2026-02-10 16:30:39.064 +08:00 [INF] 解析检测结果，原始检测数：10
+2026-02-10 16:30:39.067 +08:00 [INF] 应用NMS后检测数：1
+2026-02-10 16:30:39.144 +08:00 [INF] 开始人脸检测，图像尺寸：1920x1080
+2026-02-10 16:30:39.382 +08:00 [INF] Mat创建成功，尺寸：1920x1080
+2026-02-10 16:30:39.385 +08:00 [INF] Blob创建成功，准备前向推理
+2026-02-10 16:30:39.615 +08:00 [INF] 前向推理成功，输出尺寸：{Width=-1, Height=-1}
+2026-02-10 16:30:39.617 +08:00 [INF] 解析检测结果，原始检测数：15
+2026-02-10 16:30:39.618 +08:00 [INF] 应用NMS后检测数：3
+2026-02-10 16:33:20.969 +08:00 [INF] 此轮处理2张图片
+2026-02-10 16:33:20.969 +08:00 [INF] 开始人脸检测，图像尺寸：86x86
+2026-02-10 16:33:20.972 +08:00 [INF] Mat创建成功，尺寸：86x86
+2026-02-10 16:33:20.974 +08:00 [INF] Blob创建成功，准备前向推理
+2026-02-10 16:33:21.199 +08:00 [INF] 前向推理成功，输出尺寸：{Width=-1, Height=-1}
+2026-02-10 16:33:21.201 +08:00 [INF] 解析检测结果，原始检测数：10
+2026-02-10 16:33:21.202 +08:00 [INF] 应用NMS后检测数：1
+2026-02-10 16:33:21.242 +08:00 [INF] 开始人脸检测，图像尺寸：1920x1080
+2026-02-10 16:33:21.492 +08:00 [INF] Mat创建成功，尺寸：1920x1080
+2026-02-10 16:33:21.495 +08:00 [INF] Blob创建成功，准备前向推理
+2026-02-10 16:33:21.712 +08:00 [INF] 前向推理成功，输出尺寸：{Width=-1, Height=-1}
+2026-02-10 16:33:21.715 +08:00 [INF] 解析检测结果，原始检测数：15
+2026-02-10 16:33:21.716 +08:00 [INF] 应用NMS后检测数：3
+2026-02-10 16:33:29.623 +08:00 [INF] === 硬件配置信息 ===
+2026-02-10 16:33:29.642 +08:00 [INF] CPU核心数: 20
+2026-02-10 16:33:29.643 +08:00 [INF] 进程ID: 3664
+2026-02-10 16:33:29.653 +08:00 [INF] 进程内存使用: 48 MB
+2026-02-10 16:33:29.654 +08:00 [INF] .NET运行时版本: 8.0.23
+2026-02-10 16:33:29.708 +08:00 [INF] GPU: 未检测到GPU加速支持
+2026-02-10 16:33:29.709 +08:00 [INF] ==================
+2026-02-10 16:33:29.711 +08:00 [INF] 开始预加载模型...
+2026-02-10 16:33:29.901 +08:00 [INF] 加载了人脸检测模型: yolov8s-face.onnx
+2026-02-10 16:33:30.064 +08:00 [INF] 此轮处理2张图片
+2026-02-10 16:33:30.064 +08:00 [INF] 开始人脸检测，图像尺寸：86x86
+2026-02-10 16:33:30.068 +08:00 [INF] Mat创建成功，尺寸：86x86
+2026-02-10 16:33:30.071 +08:00 [INF] Blob创建成功，准备前向推理
+2026-02-10 16:33:30.221 +08:00 [INF] 加载了人脸特征提取模型: ArcFace.onnx
+2026-02-10 16:33:30.224 +08:00 [INF] 模型预加载完成
+2026-02-10 16:33:30.246 +08:00 [INF] Qdrant已在 127.0.0.1:6334 运行，跳过内置启动。
+2026-02-10 16:33:30.302 +08:00 [INF] 前向推理成功，输出尺寸：{Width=-1, Height=-1}
+2026-02-10 16:33:30.304 +08:00 [INF] 解析检测结果，原始检测数：10
+2026-02-10 16:33:30.305 +08:00 [INF] 应用NMS后检测数：1
+2026-02-10 16:33:30.382 +08:00 [INF] 开始人脸检测，图像尺寸：1920x1080
+2026-02-10 16:33:30.717 +08:00 [INF] 预加载人脸检测和特征提取模型...
+2026-02-10 16:33:30.737 +08:00 [INF] Mat创建成功，尺寸：1920x1080
+2026-02-10 16:33:30.741 +08:00 [INF] Blob创建成功，准备前向推理
+2026-02-10 16:33:30.772 +08:00 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://0.0.0.0:12355: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: 通常每个套接字地址(协议/网络地址/端口)只允许使用一次。
+ ---> System.Net.Sockets.SocketException (10048): 通常每个套接字地址(协议/网络地址/端口)只允许使用一次。
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.ListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindAsync(ListenOptions[] listenOptions, AddressBindContext context, Func`2 useHttps, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__15_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2026-02-10 16:33:31.047 +08:00 [INF] 前向推理成功，输出尺寸：{Width=-1, Height=-1}
+2026-02-10 16:33:31.049 +08:00 [INF] 解析检测结果，原始检测数：15
+2026-02-10 16:33:31.050 +08:00 [INF] 应用NMS后检测数：3

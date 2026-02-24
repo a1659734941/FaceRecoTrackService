@@ -65,6 +65,16 @@ namespace FaceRecoTrackService.Services
                     SingleReader = false
                 });
 
+            // 预加载模型并确认初始化完成
+            _logger.LogInformation("预加载人脸检测和特征提取模型...");
+            var tempDetector = FaceDetector.GetInstance(_faceOptions);
+            var tempExtractor = FaceFeatureService.GetInstance(_faceOptions);
+            _logger.LogInformation("模型加载完成，开始处理任务...");
+
+            // 添加启动延迟，让系统稳定
+            _logger.LogInformation("系统启动中，等待2秒后开始处理任务...");
+            await Task.Delay(2000, stoppingToken);
+
             var workers = new Task[workerCount];
             for (int i = 0; i < workerCount; i++)
             {
@@ -83,8 +93,6 @@ namespace FaceRecoTrackService.Services
                 {
                     var snapshots = await _snapshotClient.FetchNewSnapshotsAsync(_ftpOptions, stoppingToken);
                     int totalImages = snapshots.Count;
-                    int totalFaces = 0;
-                    int blurryFaces = 0;
 
                     foreach (var snapshot in snapshots)
                     {
@@ -93,8 +101,7 @@ namespace FaceRecoTrackService.Services
 
                     if (totalImages > 0)
                     {
-                        _logger.LogInformation("此轮处理{TotalImages}张图片，扫描到{TotalFaces}张人脸，有{BlurryFaces}张模糊或非人脸", 
-                            totalImages, totalFaces, blurryFaces);
+                        _logger.LogInformation("此轮处理{TotalImages}张图片", totalImages);
                     }
 
                     await Task.Delay(_pipelineOptions.PollIntervalMs, stoppingToken);
@@ -151,13 +158,25 @@ namespace FaceRecoTrackService.Services
             SKImage? snapshotImage = null;
             try
             {
+                // 检查快照数据是否有效
+                if (snapshot == null || snapshot.ImageBytes == null || snapshot.ImageBytes.Length == 0)
+                {
+                    _logger.LogWarning("快照数据无效，跳过处理: {FilePath}", snapshot?.FilePath);
+                    // 即使数据无效，也尝试删除文件
+                    if (_pipelineOptions.DeleteProcessedSnapshots && !string.IsNullOrEmpty(snapshot?.FilePath))
+                    {
+                        TryDeleteSnapshotFile(snapshot.FilePath);
+                    }
+                    return;
+                }
+
                 snapshotImage = ImageUtils.LoadImage(snapshot.ImageBytes);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "[{Camera}] 快照解析失败", snapshot.CameraName);
                 // 即使解析失败，也删除文件
-                if (_pipelineOptions.DeleteProcessedSnapshots)
+                if (_pipelineOptions.DeleteProcessedSnapshots && !string.IsNullOrEmpty(snapshot?.FilePath))
                 {
                     TryDeleteSnapshotFile(snapshot.FilePath);
                 }
@@ -373,8 +392,19 @@ namespace FaceRecoTrackService.Services
             {
                 try
                 {
-                    if (File.Exists(filePath))
-                        File.Delete(filePath);
+                    // 检查文件是否存在
+                    if (!File.Exists(filePath))
+                    {
+                        // 文件已不存在，可能被其他线程删除，直接返回
+                        return;
+                    }
+                    
+                    File.Delete(filePath);
+                    return;
+                }
+                catch (FileNotFoundException)
+                {
+                    // 文件不存在，可能被其他线程删除，直接返回
                     return;
                 }
                 catch (Exception ex)

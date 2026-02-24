@@ -22,8 +22,8 @@ namespace FaceRecoTrackService.Core.Algorithms
         private readonly System.Drawing.Size _inputSize = new System.Drawing.Size(640, 640);
         private bool _disposed;
 
-        private static readonly Dictionary<string, FaceDetector> _instanceCache = new Dictionary<string, FaceDetector>();
-        private static readonly object _lock = new object();
+        private static readonly ThreadLocal<Dictionary<string, FaceDetector>> _threadLocalInstances = 
+            new ThreadLocal<Dictionary<string, FaceDetector>>(() => new Dictionary<string, FaceDetector>());
 
         private FaceDetector(FaceRecognitionOptions config)
         {
@@ -69,15 +69,18 @@ namespace FaceRecoTrackService.Core.Algorithms
                 throw new ArgumentException("YoloModelPath配置不能为空", nameof(config));
 
             string key = config.YoloModelPath;
-            lock (_lock)
+            var instances = _threadLocalInstances.Value;
+            FaceDetector instance;
+            if (instances != null && instances.TryGetValue(key, out instance))
             {
-                if (!_instanceCache.TryGetValue(key, out var instance))
-                {
-                    instance = new FaceDetector(config);
-                    _instanceCache[key] = instance;
-                }
                 return instance;
             }
+            instance = new FaceDetector(config);
+            if (instances != null)
+            {
+                instances[key] = instance;
+            }
+            return instance;
         }
 
         /// <summary>
@@ -93,6 +96,8 @@ namespace FaceRecoTrackService.Core.Algorithms
 
             try
             {
+                Log.Information("开始人脸检测，图像尺寸：{Width}x{Height}", image.Width, image.Height);
+                
                 using var mat = ToMat(image);
                 if (mat.IsEmpty)
                 {
@@ -112,12 +117,22 @@ namespace FaceRecoTrackService.Core.Algorithms
                 using var outputs = new VectorOfMat();
                 _net.Forward(outputs, _net.UnconnectedOutLayersNames);
                 if (outputs.Size == 0)
+                {
+                    Log.Warning("前向推理输出为空");
                     return new List<ObjectDetection>();
+                }
                 if (outputs[0] == null || outputs[0].IsEmpty)
+                {
+                    Log.Warning("前向推理输出[0]为空");
                     return new List<ObjectDetection>();
+                }
 
                 var detections = ParseDetections(outputs[0], mat.Size, _inputSize, _config.DetectionConfidence);
-                return ApplyNms(detections, _config.DetectionConfidence, _config.IouThreshold);
+                var nmsResults = ApplyNms(detections, _config.DetectionConfidence, _config.IouThreshold);
+                
+                Log.Information("人脸检测完成，检测数：{Count}", nmsResults.Count);
+                
+                return nmsResults;
             }
             catch (Exception ex)
             {

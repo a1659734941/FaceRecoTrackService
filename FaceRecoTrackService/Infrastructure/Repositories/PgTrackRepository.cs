@@ -16,6 +16,35 @@ namespace FaceRecoTrackService.Infrastructure.Repositories
             _connectionString = connectionString;
         }
 
+        public async Task<bool> InsertTrackIfNotExistsAsync(TrackRecord record, int dedupSeconds, CancellationToken cancellationToken)
+        {
+            const string sql = @"
+INSERT INTO track_records(person_id, snap_time, snap_location, snap_camera_ip, record_camera_ip, record_start_time, record_end_time, created_at)
+SELECT @person_id, @snap_time, @snap_location, @snap_camera_ip, @record_camera_ip, @record_start_time, @record_end_time, @created_at
+WHERE NOT EXISTS (
+    SELECT 1 FROM track_records 
+    WHERE person_id = @person_id 
+    AND snap_camera_ip = @snap_camera_ip
+    AND snap_time >= @snap_time - INTERVAL '1 second' * @dedup_seconds
+    AND snap_time <= @snap_time + INTERVAL '1 second' * @dedup_seconds
+);";
+
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync(cancellationToken);
+            await using var cmd = new NpgsqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("person_id", record.PersonId);
+            cmd.Parameters.AddWithValue("snap_time", record.SnapTimeUtc);
+            cmd.Parameters.AddWithValue("snap_location", (object?)record.SnapLocation ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("snap_camera_ip", record.SnapCameraIp);
+            cmd.Parameters.AddWithValue("record_camera_ip", (object?)record.RecordCameraIp ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("record_start_time", record.RecordStartTimeUtc);
+            cmd.Parameters.AddWithValue("record_end_time", (object?)record.RecordEndTimeUtc ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("created_at", record.CreatedAtUtc);
+            cmd.Parameters.AddWithValue("dedup_seconds", dedupSeconds);
+            var affected = await cmd.ExecuteNonQueryAsync(cancellationToken);
+            return affected > 0;
+        }
+
         public async Task InsertTrackAsync(TrackRecord record, CancellationToken cancellationToken)
         {
             const string sql = @"

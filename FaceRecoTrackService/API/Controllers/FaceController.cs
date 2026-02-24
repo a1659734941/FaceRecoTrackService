@@ -263,32 +263,36 @@ namespace FaceRecoTrackService.API.Controllers
                 return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Fail(400, string.Join(", ", errors)));
             }
             
+            ComputerFaceRecognitionResponse result;
             try
             {
                 // 调用验证服务进行电脑人脸识别
-                var result = await _verificationService.ComputerRecognizeAsync(request, cancellationToken);
+                result = await _verificationService.ComputerRecognizeAsync(request, cancellationToken);
                 
-                // 检查是否识别成功
+                // 无论是否识别成功，都返回 200
                 if (result.Recognized)
                 {
-                    // 识别成功，返回 200
-                    return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Ok(result, "识别完成"));
+                    // 识别成功
+                    return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Ok(result, "请求成功"));
                 }
                 else
                 {
-                    // 识别失败，返回 400
-                    return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Fail(400, result.Message));
+                    // 未识别到人脸，返回成功状态和特定消息
+                    result.Message = "未识别到匹配的人脸";
+                    return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Ok(result, "请求成功"));
                 }
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException)
             {
                 // 处理参数错误
-                return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Fail(400, ex.Message));
+                result = new ComputerFaceRecognitionResponse { Recognized = false, Message = "未识别到匹配的人脸" };
+                return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Ok(result, "请求成功"));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // 处理其他错误
-                return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Fail(400, $"识别失败：{ex.Message}"));
+                result = new ComputerFaceRecognitionResponse { Recognized = false, Message = "未识别到匹配的人脸" };
+                return Ok(ApiResponse<ComputerFaceRecognitionResponse>.Ok(result, "请求成功"));
             }
         }
     }
