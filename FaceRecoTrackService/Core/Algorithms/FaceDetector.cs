@@ -21,6 +21,7 @@ namespace FaceRecoTrackService.Core.Algorithms
         private readonly FaceRecognitionOptions _config;
         private readonly System.Drawing.Size _inputSize = new System.Drawing.Size(640, 640);
         private bool _disposed;
+        private readonly object _lockObj = new object();
 
         private static readonly ThreadLocal<Dictionary<string, FaceDetector>> _threadLocalInstances = 
             new ThreadLocal<Dictionary<string, FaceDetector>>(() => new Dictionary<string, FaceDetector>());
@@ -112,27 +113,37 @@ namespace FaceRecoTrackService.Core.Algorithms
                     new MCvScalar(),
                     swapRB: true,
                     crop: false);
-                _net.SetInput(blob);
-
-                using var outputs = new VectorOfMat();
-                _net.Forward(outputs, _net.UnconnectedOutLayersNames);
-                if (outputs.Size == 0)
-                {
-                    Log.Warning("前向推理输出为空");
-                    return new List<ObjectDetection>();
-                }
-                if (outputs[0] == null || outputs[0].IsEmpty)
-                {
-                    Log.Warning("前向推理输出[0]为空");
-                    return new List<ObjectDetection>();
-                }
-
-                var detections = ParseDetections(outputs[0], mat.Size, _inputSize, _config.DetectionConfidence);
-                var nmsResults = ApplyNms(detections, _config.DetectionConfidence, _config.IouThreshold);
                 
-                Log.Information("人脸检测完成，检测数：{Count}", nmsResults.Count);
-                
-                return nmsResults;
+                lock (_lockObj)
+                {
+                    if (_disposed)
+                    {
+                        Log.Warning("FaceDetector 已释放，跳过检测");
+                        return new List<ObjectDetection>();
+                    }
+                    
+                    _net.SetInput(blob);
+
+                    using var outputs = new VectorOfMat();
+                    _net.Forward(outputs, _net.UnconnectedOutLayersNames);
+                    if (outputs.Size == 0)
+                    {
+                        Log.Warning("前向推理输出为空");
+                        return new List<ObjectDetection>();
+                    }
+                    if (outputs[0] == null || outputs[0].IsEmpty)
+                    {
+                        Log.Warning("前向推理输出[0]为空");
+                        return new List<ObjectDetection>();
+                    }
+
+                    var detections = ParseDetections(outputs[0], mat.Size, _inputSize, _config.DetectionConfidence);
+                    var nmsResults = ApplyNms(detections, _config.DetectionConfidence, _config.IouThreshold);
+                    
+                    Log.Information("人脸检测完成，检测数：{Count}", nmsResults.Count);
+                    
+                    return nmsResults;
+                }
             }
             catch (Exception ex)
             {
@@ -265,12 +276,15 @@ namespace FaceRecoTrackService.Core.Algorithms
 
         protected virtual void Dispose(bool disposing)
         {
-            if (_disposed) return;
-            if (disposing)
+            lock (_lockObj)
             {
-                _net?.Dispose();
+                if (_disposed) return;
+                if (disposing)
+                {
+                    _net?.Dispose();
+                }
+                _disposed = true;
             }
-            _disposed = true;
         }
 
         private static Mat ToMat(SKImage image)
